@@ -13,7 +13,7 @@ namespace Core.StateMachine
         }
         public async UniTask EnterAsync(CancellationToken cancellationToken)
         {
-            //await _stateMachine.ChangeStateAsync<AdventureState>(false);
+            await _stateMachine.ChangeStateAsync<GameState>(false);
         }
 
         public async UniTask ExitAsync(CancellationToken cancellationToken)

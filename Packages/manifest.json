@@ -1,9 +1,10 @@
 {
   "dependencies": {
-    "com.dbrizov.naughtyattributes": "2.1.4",
     "com.cysharp.unitask": "2.5.5",
+    "com.dbrizov.naughtyattributes": "2.1.4",
     "com.neuecc.unirx": "7.1.0",
     "com.svermeulen.extenject": "9.2.0-stcf3",
+    "com.unity.addressables": "2.6.0",
     "com.unity.collab-proxy": "2.8.2",
     "com.unity.feature.mobile": "1.0.0",
     "com.unity.ide.rider": "3.0.36",

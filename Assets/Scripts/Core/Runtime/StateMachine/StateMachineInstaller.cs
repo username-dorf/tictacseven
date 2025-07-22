@@ -11,16 +11,7 @@ namespace Core.StateMachine
             Container.Bind<StateFactory>()
                 .AsSingle();
             
-            BindStates();
-        }
-        
-        public void BindStates()
-        {
-            Container.Bind<IState>()
-                .WithId(nameof(BootstrapState))
-                .To<BootstrapState>()
-                .AsSingle()
-                .NonLazy();
+            StatesRegistration.Install(Container);
         }
     }
 }
