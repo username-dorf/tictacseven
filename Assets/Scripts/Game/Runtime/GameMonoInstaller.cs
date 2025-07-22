@@ -1,3 +1,4 @@
+using Game.Entities;
 using Game.Field;
 using Zenject;
 
@@ -8,6 +9,7 @@ namespace Game
         public override void InstallBindings()
         {
             FieldInstaller.Install(Container);
+            EntitiesInstaller.Install(Container);
             
             Container.BindInterfacesTo<GameBootstrap>()
                 .AsSingle();

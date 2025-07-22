@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Prefabs-Collection-Chess
+  m_EditorClassIdentifier: 
+  m_GroupName: Local-Prefabs-Collection-Chess
+  m_GUID: 1418cbe7d4c884f23a7fbc3a60b51714
+  m_SerializeEntries:
+  - m_GUID: 1bcb2f21da5604c76b165b10ba6d2397
+    m_Address: 04_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35d17b2be94894054bb1b595dfdcdaa5
+    m_Address: 02_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b08ea95951a5448db2045bb3486f703
+    m_Address: 06_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8302bcabd605a41d5b75e77e81162884
+    m_Address: 05_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9358e1bb2168d4327a54eb4519c8c909
+    m_Address: 01_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9b1084b9dfc84abea070f85f672ae76
+    m_Address: 03_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3bec1df6dde249be8b34e81f87abeae
+    m_Address: 07_chess
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7620c71f5a4684a68a45c10e79dc37ce, type: 2}
+    - {fileID: 11400000, guid: 9ae9abdd5bde24ddea0c1ba53280dd73, type: 2}
