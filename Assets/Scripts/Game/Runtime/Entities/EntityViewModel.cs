@@ -58,19 +58,36 @@ namespace Game.Entities
 
         public void SetSelected(bool isSelected)
         {
+            if(isSelected && !CanBeMoved())
+                return;
+            
             IsSelected.Value = isSelected;
         }
         public void SetDragging(bool isDragging)
         {
+            if(isDragging && !CanBeMoved())
+                return;
+            
             IsDragging.Value = isDragging;
         }
         public void SetPosition(Vector3 position)
         {
+            if(!CanBeMoved())
+                return;
+            
             _model.Transform.Position.Value = position;
+        }
+
+        private bool CanBeMoved()
+        {
+            return !_model.Transform.IsLocked.Value;
         }
 
         private void OnRelease()
         {
+            if(!CanBeMoved())
+                return;
+            
             Debug.Log($"EntityViewModel: OnRelease called {_model.Transform.Position.Value}");
             _releaseCommand.Execute(_model);
         }

@@ -10,18 +10,29 @@ namespace Game.Field
     {
         IObservable<T> ReleaseCommand { get; }
     }
+
+    public interface IPlaceableModelValue
+    {
+        ReadOnlyReactiveProperty<int> Value { get;}
+        ReadOnlyReactiveProperty<int> Owner { get; }
+    }
     
-    public interface IPlaceableModel
+    public interface IPlaceableModel : IPlaceableModelValue
     {
         public interface ITransform
         {
             ReactiveProperty<Vector3> Position { get; }
             ReadOnlyReactiveProperty<Vector3> InitialPosition { get; }
+            
+            /// <summary>
+            /// Indicates if it can be moved, usually after placement.
+            /// </summary>
+            ReadOnlyReactiveProperty<bool> IsLocked { get; }
             void SetPosition(Vector3 position);
+            void SetLocked(bool locked);
         }
         
-        public ReadOnlyReactiveProperty<int> Value { get;}
-        public ITransform Transform { get; }
+        ITransform Transform { get; }
     }
     
     public class FieldViewModel : IDisposable
@@ -65,7 +76,8 @@ namespace Game.Field
                 var placePosition = nearestPlace.Transform.Position.Value;
                 
                 placeableModel.Transform.SetPosition(placePosition);
-                nearestPlace = new EntityModel(placeableModel.Value.Value, placePosition);
+                placeableModel.Transform.SetLocked(true);
+                nearestPlace = new EntityModel(placeableModel.Value.Value,placeableModel.Owner.Value, placePosition);
             }
             catch (Exception e)
             {
@@ -110,7 +122,18 @@ namespace Game.Field
 
         private bool CanPlace(EntityModel placeModel, IPlaceableModel placeableModel)
         {
+            if (!IsValidOwner(placeModel, placeableModel))
+                return false;
             return placeModel.Value.Value < placeableModel.Value.Value;
+        }
+
+        private bool IsValidOwner(EntityModel placeModel, IPlaceableModel placeableModel)
+        {
+            if (placeModel.IsEmptyOwner())
+                return true;
+            if (placeModel.Owner.Value == placeableModel.Owner.Value)
+                return false;
+            return true;
         }
 
         

@@ -27,12 +27,12 @@ namespace Game.Entities
             _assetProvider = new EntityAssetProvider();
         }
         public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(int modelsCount,
-            Vector3[] positions, CancellationToken cancellationToken)
+            Vector3[] positions,int owner, CancellationToken cancellationToken)
         {
             var models = new EntityModel[modelsCount];
             for (int i = 0; i < modelsCount; i++)
             {
-                models[i] = new EntityModel(i + 1, positions[i]);
+                models[i] = new EntityModel(i + 1, owner, positions[i]);
             }
             return await CreateAll(models, positions, cancellationToken);
         }

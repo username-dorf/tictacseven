@@ -31,6 +31,8 @@ namespace Game
 
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
         {
+            var playerOwner = 1;
+            
             var fieldView = await _fieldFactory.CreateAsync(cancellationToken);
             var fieldGrid = _fieldGridFactory.Create(fieldView.Collider, FieldConfig.FIELD_ROWS, FieldConfig.FIELD_COLUMNS);
             fieldView.DebugView.SetPoints(fieldGrid);
@@ -43,7 +45,7 @@ namespace Game
             entitiesBackgroundView.DebugView.SetPoints(entitiesDebugPositions);
 
             var entities = await 
-                _entityFactory.CreateAll(FieldConfig.ENTITIES_COUNT, entitiesDebugPositions, cancellationToken);
+                _entityFactory.CreateAll(FieldConfig.ENTITIES_COUNT, entitiesDebugPositions, playerOwner, cancellationToken);
             
             var fieldModel = new FieldModel(fieldGrid);
             var fieldViewModel = new FieldViewModel(fieldModel, entities
