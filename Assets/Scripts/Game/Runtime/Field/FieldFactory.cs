@@ -10,9 +10,11 @@ namespace Game.Field
     public class FieldFactory : IDisposable
     {
         private FieldAssetProvider _assetProvider;
-        
-        public FieldFactory()
+        private FieldViewProvider _fieldViewProvider;
+
+        public FieldFactory(FieldViewProvider fieldViewProvider)
         {
+            _fieldViewProvider = fieldViewProvider;
             _assetProvider = new FieldAssetProvider();
         }
         
@@ -21,7 +23,11 @@ namespace Game.Field
             var prefab = await _assetProvider.LoadAssetAsync(cancellationToken);
             if(prefab is null)
                 return null;
-            return GameObject.Instantiate(prefab);
+            var view = GameObject.Instantiate(prefab);
+            if (view is null)
+                throw new Exception("Failed to instantiate FieldView from prefab");
+            _fieldViewProvider.Initialize(view);
+            return view;
         }
         
         public void Dispose()

@@ -1,4 +1,5 @@
 using Game.Entities;
+using UnityEngine;
 
 namespace Game.Field
 {
@@ -6,29 +7,21 @@ namespace Game.Field
     {
         public EntityModel[,] Entities;
 
-        public FieldModel(int rows, int columns)
+        public FieldModel(Vector3[,] grid)
         {
-            Entities = new EntityModel[rows, columns];
-            this.FillWithEmpty();
+            Entities = new EntityModel[grid.GetLength(0), grid.GetLength(1)];
+            for (int row = 0; row < grid.GetLength(0); row++)
+            {
+                for (int column = 0; column < grid.GetLength(1); column++)
+                {
+                    Entities[row, column] = EntityModel.CreateEmpty(grid[row, column]);
+                }
+            }
         }
         
         public void SetValue(int row, int column, EntityModel value)
         {
             Entities[row, column] = value;
-        }
-    }
-
-    public static class FieldExtension
-    {
-        public static void FillWithEmpty(this FieldModel field)
-        {
-            for (int row = 0; row < field.Entities.GetLength(0); row++)
-            {
-                for (int column = 0; column < field.Entities.GetLength(1); column++)
-                {
-                    field.Entities[row, column] = EntityModel.Empty;
-                }
-            }
         }
     }
 }

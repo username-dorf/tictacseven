@@ -10,6 +10,8 @@ namespace Game.Field
                 .AsSingle();
             Container.Bind<FieldGridFactory>()
                 .AsSingle();
+            Container.Bind<FieldViewProvider>()
+                .AsSingle();
         }
     }
 }

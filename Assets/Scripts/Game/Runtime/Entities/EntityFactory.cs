@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Zenject;
 
 namespace Game.Entities
 {
@@ -18,23 +19,25 @@ namespace Game.Entities
         private Task<EntityView[]> _loadingTask;
         private EntityView[] _loadedCollectionViews;
         private EntityAssetProvider _assetProvider;
+        private DiContainer _diContainer;
 
-        public EntityFactory()
+        public EntityFactory(DiContainer diContainer)
         {
+            _diContainer = diContainer;
             _assetProvider = new EntityAssetProvider();
         }
-        public async UniTask<(EntityViewModel viewModel, EntityView model)[]> CreateAll(int modelsCount,
+        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(int modelsCount,
             Vector3[] positions, CancellationToken cancellationToken)
         {
             var models = new EntityModel[modelsCount];
             for (int i = 0; i < modelsCount; i++)
             {
-                models[i] = new EntityModel(i + 1);
+                models[i] = new EntityModel(i + 1, positions[i]);
             }
             return await CreateAll(models, positions, cancellationToken);
         }
 
-        public async UniTask<(EntityViewModel viewModel, EntityView model)[]> CreateAll(EntityModel[] models,
+        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
             Vector3[] positions, CancellationToken cancellationToken)
         {
             var modelsCount = models.Length;
@@ -43,7 +46,7 @@ namespace Game.Entities
             if (modelsCount != positionsCount)
                 throw new ArgumentException("Models count must be equal to positions count");
 
-            var tasks = new UniTask<(EntityViewModel viewModel, EntityView model)>[modelsCount];
+            var tasks = new UniTask<(EntityViewModel viewModel, EntityModel model)>[modelsCount];
 
             for (int i = 0; i < modelsCount; i++)
             {
@@ -51,7 +54,7 @@ namespace Game.Entities
             }
             return await UniTask.WhenAll(tasks);
         }
-        public async UniTask<(EntityViewModel viewModel, EntityView model)> Create(EntityModel model, Vector3 position, CancellationToken cancellationToken)
+        public async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model, Vector3 position, CancellationToken cancellationToken)
         {
             if (_loadedCollectionViews == null)
             {
@@ -64,14 +67,14 @@ namespace Game.Entities
                 }
                 _loadedCollectionViews = await _loadingTask;
             }
-            var view = GameObject.Instantiate(_loadedCollectionViews[model.Value-1], position, Quaternion.identity);
+            var view = GameObject.Instantiate(_loadedCollectionViews[model.Value.Value-1], position, Quaternion.identity);
             
             //TODO: set base scale for collection
             view.SetScale(0.8f);
             
-            var viewModel = new EntityViewModel(model);
+            var viewModel = _diContainer.Instantiate<EntityViewModel>(new object[]{model});
             view.Initialize(viewModel);
-            return (viewModel, view);
+            return (viewModel, model);
         }
 
         private class EntityAssetProvider : IDisposable
