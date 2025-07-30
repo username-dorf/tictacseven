@@ -47,9 +47,12 @@ namespace Game
             var entities = await 
                 _entityFactory.CreateAll(FieldConfig.ENTITIES_COUNT, entitiesDebugPositions, playerOwner, cancellationToken);
             
-            var fieldModel = new FieldModel(fieldGrid);
+            var fieldModel = new FieldModel(fieldGrid,FieldConfig.PRESPAWN_PRESET_1);
             var fieldViewModel = new FieldViewModel(fieldModel, entities
                 .Select(x=>x.viewModel));
+            
+            var existingEntities =
+                await _entityFactory.CreateExisting(fieldGrid, FieldConfig.PRESPAWN_PRESET_1, cancellationToken);
         }
 
         public void Dispose()

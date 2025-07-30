@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using Game.Field;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -34,23 +35,33 @@ namespace Game.Entities
             {
                 models[i] = new EntityModel(i + 1, owner, positions[i]);
             }
-            return await CreateAll(models, positions, cancellationToken);
+            return await CreateAll(models, cancellationToken);
         }
 
-        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
-            Vector3[] positions, CancellationToken cancellationToken)
+        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateExisting(Vector3[,] gridPositions, EntityPlacedModel[] placedModels,
+            CancellationToken cancellationToken)
+        {
+            var models = new EntityModel[placedModels.Length];
+            for (var i = 0; i < models.Length; i++)
+            {
+                var coors = placedModels[i].GridPosition.Value;
+                var position = gridPositions[coors.x, coors.y];
+                models[i] = new EntityModel(placedModels[i].Value.Value, placedModels[i].Owner.Value, position);
+                models[i].Transform.SetLocked(true);
+            }
+            return await CreateAll(models, cancellationToken);
+        }
+
+        private async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
+             CancellationToken cancellationToken)
         {
             var modelsCount = models.Length;
-            var positionsCount = positions.Length;
-
-            if (modelsCount != positionsCount)
-                throw new ArgumentException("Models count must be equal to positions count");
-
+            
             var tasks = new UniTask<(EntityViewModel viewModel, EntityModel model)>[modelsCount];
 
             for (int i = 0; i < modelsCount; i++)
             {
-                tasks[i] = Create(models[i], positions[i], cancellationToken);
+                tasks[i] = Create(models[i], models[i].Transform.InitialPosition.Value, cancellationToken);
             }
             return await UniTask.WhenAll(tasks);
         }
