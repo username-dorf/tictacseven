@@ -1,4 +1,5 @@
 using Game.Entities;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Game.Field
@@ -11,9 +12,13 @@ namespace Game.Field
         public const int ENTITIES_COUNT = 7;
         public const float PLACE_MAGNITUDE = 1.5f;
 
-        public static readonly EntityPlacedModel[] PRESPAWN_PRESET_1 = new[]
+        [NotNull]
+        public static EntityPlacedModel[] CREATE_PRESPAWN_PRESET_1(int owner)
         {
-            new EntityPlacedModel(1, 99, new Vector2Int(0, 0)),
-        };
+            return new[]
+            {
+                new EntityPlacedModel(1, owner, new Vector2Int(0, 0)),
+            };
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Game.Field
     {
         public override void InstallBindings()
         {
-            Container.Bind<FieldFactory>()
+            Container.Bind<FieldViewFactory>()
                 .AsSingle();
             Container.Bind<FieldGridFactory>()
                 .AsSingle();

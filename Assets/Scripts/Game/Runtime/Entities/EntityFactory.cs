@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Game.Field;
+using Game.User;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -20,36 +21,59 @@ namespace Game.Entities
         private Task<EntityView[]> _loadingTask;
         private EntityView[] _loadedCollectionViews;
         private EntityAssetProvider _assetProvider;
-        private DiContainer _diContainer;
+        private FieldViewProvider _fieldViewProvider;
 
-        public EntityFactory(DiContainer diContainer)
+        public EntityFactory(FieldViewProvider fieldViewProvider)
         {
-            _diContainer = diContainer;
+            _fieldViewProvider = fieldViewProvider;
             _assetProvider = new EntityAssetProvider();
         }
-        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(int modelsCount,
-            Vector3[] positions,int owner, CancellationToken cancellationToken)
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner, CancellationToken cancellationToken)
         {
-            var models = new EntityModel[modelsCount];
-            for (int i = 0; i < modelsCount; i++)
+            var models = new EntityModel[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
             {
                 models[i] = new EntityModel(i + 1, owner, positions[i]);
             }
-            return await CreateAll(models, cancellationToken);
+            var entities= await CreateAll(models, cancellationToken);
+            var userEntitiesModel = new UserEntitiesModel(entities
+                .Select(x => (IPlaceableModel) x.model));
+            var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
+            return userEntitiesModel;
         }
 
-        public async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateExisting(Vector3[,] gridPositions, EntityPlacedModel[] placedModels,
-            CancellationToken cancellationToken)
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner, EntityPlacedModel[] placedModels,
+            Vector3[,] gridPositions, CancellationToken cancellationToken)
         {
-            var models = new EntityModel[placedModels.Length];
+            if (placedModels is null || placedModels.Length == 0)
+            {
+                return await CreateAll(positions, owner, cancellationToken);
+            }
+            
+            
+            var models = new EntityModel[positions.Length];
             for (var i = 0; i < models.Length; i++)
             {
-                var coors = placedModels[i].GridPosition.Value;
-                var position = gridPositions[coors.x, coors.y];
-                models[i] = new EntityModel(placedModels[i].Value.Value, placedModels[i].Owner.Value, position);
-                models[i].Transform.SetLocked(true);
+                if (placedModels.Any(x => x.Data.Merit.Value == i + 1))
+                {
+                    var placedModel = placedModels.First(x => x.Data.Merit.Value == i + 1);
+                    var coors = placedModel.GridPosition.Value;
+                    var position = gridPositions[coors.x, coors.y];
+                    models[i] = new EntityModel(placedModel.Data.Merit.Value, placedModel.Data.Owner.Value,
+                        position);
+                    models[i].Transform.SetLocked(true);
+                }
+                else
+                {
+                    models[i] = new EntityModel(i + 1, owner, positions[i]);
+                }
             }
-            return await CreateAll(models, cancellationToken);
+            var entities = await CreateAll(models, cancellationToken);
+            var availableEntities = entities.Where(x => !x.model.Transform.Moveable.Value);
+            var userEntitiesModel = new UserEntitiesModel(availableEntities
+                .Select(x => (IPlaceableModel) x.model));
+            var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
+            return userEntitiesModel;
         }
 
         private async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
@@ -65,7 +89,7 @@ namespace Game.Entities
             }
             return await UniTask.WhenAll(tasks);
         }
-        public async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model, Vector3 position, CancellationToken cancellationToken)
+        private async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model, Vector3 position, CancellationToken cancellationToken)
         {
             if (_loadedCollectionViews == null)
             {
@@ -78,13 +102,13 @@ namespace Game.Entities
                 }
                 _loadedCollectionViews = await _loadingTask;
             }
-            var view = GameObject.Instantiate(_loadedCollectionViews[model.Value.Value-1], position, Quaternion.identity);
+            var view = GameObject.Instantiate(_loadedCollectionViews[model.Data.Merit.Value-1], position, Quaternion.identity);
             
             //TODO: set base scale for collection
             view.SetScale(0.8f);
             
-            var viewModel = _diContainer.Instantiate<EntityViewModel>(new object[]{model});
-            view.Initialize(viewModel);
+            var viewModel = new EntityViewModel(model);
+            view.Initialize(viewModel,_fieldViewProvider);
             return (viewModel, model);
         }
 

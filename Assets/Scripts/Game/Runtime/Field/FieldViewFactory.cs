@@ -7,12 +7,12 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.Field
 {
-    public class FieldFactory : IDisposable
+    public class FieldViewFactory : IDisposable
     {
         private FieldAssetProvider _assetProvider;
         private FieldViewProvider _fieldViewProvider;
 
-        public FieldFactory(FieldViewProvider fieldViewProvider)
+        public FieldViewFactory(FieldViewProvider fieldViewProvider)
         {
             _fieldViewProvider = fieldViewProvider;
             _assetProvider = new FieldAssetProvider();

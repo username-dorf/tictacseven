@@ -23,6 +23,15 @@ namespace Game.Entities
                 return null;
             return GameObject.Instantiate(prefab);
         }
+
+        public async UniTask<EntitiesBackgroundView> CreateOpponentAsync(CancellationToken cancellationToken)
+        {
+            var prefab = await _assetProvider.LoadAssetAsync(cancellationToken);
+            if(prefab is null)
+                return null;
+            var opponentPosition = new Vector3(30, 0, 30) + prefab.transform.position;
+            return GameObject.Instantiate(prefab, opponentPosition, Quaternion.identity);
+        }
         
         public void Dispose()
         {

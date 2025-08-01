@@ -1,4 +1,5 @@
 using System;
+using Game.Field;
 using UniRx;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,12 +10,15 @@ namespace Game.Entities
     {
         [field: SerializeField] public EntityDebugView DebugView { get; private set; }
         [SerializeField] private BoxCollider collider;
-        private EntityViewModel _viewModel;
         private float _maxRayDistance = 100f;
+        
+        private EntityViewModel _viewModel;
+        private FieldViewProvider _fieldViewProvider;
 
 
-        public void Initialize(EntityViewModel viewModel)
+        public void Initialize(EntityViewModel viewModel, FieldViewProvider fieldViewProvider)
         {
+            _fieldViewProvider = fieldViewProvider;
             _viewModel = viewModel;
 
             viewModel.Value
@@ -65,7 +69,7 @@ namespace Game.Entities
                 if (Physics.Raycast(ray, out var hit, _maxRayDistance) && hit.collider == collider)
                 {
                     _viewModel.SetSelected(true);
-                    _viewModel.SetDragging(true);
+                    _viewModel.SetMoving(true);
                 }
                 else
                 {
@@ -73,9 +77,10 @@ namespace Game.Entities
                 }
             }
 
-            if (_viewModel.IsDragging.Value && isPressed && _viewModel.DragPlane.HasValue)
+            var dragPlane = _fieldViewProvider.View.DragPlane;
+            if (_viewModel.IsMoving.Value && isPressed)
             {
-                if (_viewModel.DragPlane.Value.Raycast(ray, out float enter))
+                if (dragPlane.Raycast(ray, out float enter))
                 {
                     Vector3 worldPos = ray.GetPoint(enter);
                     _viewModel.SetPosition(worldPos);
@@ -85,7 +90,7 @@ namespace Game.Entities
             if (pressUp)
             {
                 _viewModel.SetSelected(false);
-                _viewModel.SetDragging(false);
+                _viewModel.SetMoving(false);
             }
         }
 

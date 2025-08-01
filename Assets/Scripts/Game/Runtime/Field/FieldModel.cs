@@ -8,22 +8,26 @@ namespace Game.Field
     {
         public IReadOnlyReactiveDictionary<Vector2Int, EntityModel> Entities => _entities;
         private ReactiveDictionary<Vector2Int, EntityModel> _entities;
-        private Vector2Int _dimensions;
 
         public FieldModel(Vector3[,] grid)
         {
             _entities = CreateEmpty(grid);
-            _dimensions = new Vector2Int(grid.GetLength(0), grid.GetLength(1));
         }
 
         public FieldModel(Vector3[,] grid, EntityPlacedModel[] placedModels)
         {
+            if(placedModels is null || placedModels.Length==0)
+            {
+                _entities = CreateEmpty(grid);
+                return;
+            }
+            
             _entities = CreateEmpty(grid);
             foreach (var placedModel in placedModels)
             {
                 var coors = placedModel.GridPosition.Value;
                 var position = _entities[coors].Transform.Position;
-                _entities[coors] = new EntityModel(placedModel.Value.Value, placedModel.Owner.Value, position.Value);
+                _entities[coors] = new EntityModel(placedModel.Data.Merit.Value, placedModel.Data.Owner.Value, position.Value);
             }
         }
 

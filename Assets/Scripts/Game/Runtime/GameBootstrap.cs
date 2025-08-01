@@ -1,22 +1,25 @@
+using System;
 using System.Linq;
 using System.Threading;
 using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using Game.Entities;
 using Game.Field;
+using Game.User;
+using UnityEngine;
 
 namespace Game
 {
     public class GameBootstrap : IGameBootstrapAsync
     {
-        private readonly FieldFactory _fieldFactory;
+        private readonly FieldViewFactory _fieldViewFactory;
         private readonly FieldGridFactory _fieldGridFactory;
         private readonly EntitiesBackgroundFactory _entitiesBackgroundFactory;
         private readonly EntitiesBackgroundGridFactory _entitiesBackgroundGridFactory;
         private readonly EntityFactory _entityFactory;
 
         public GameBootstrap(
-            FieldFactory fieldFactory,
+            FieldViewFactory fieldViewFactory,
             FieldGridFactory fieldGridFactory,
             EntitiesBackgroundFactory entitiesBackgroundFactory,
             EntitiesBackgroundGridFactory entitiesBackgroundGridFactory,
@@ -26,14 +29,15 @@ namespace Game
             _entitiesBackgroundGridFactory = entitiesBackgroundGridFactory;
             _entitiesBackgroundFactory = entitiesBackgroundFactory;
             _fieldGridFactory = fieldGridFactory;
-            _fieldFactory = fieldFactory;
+            _fieldViewFactory = fieldViewFactory;
         }
 
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
         {
             var playerOwner = 1;
+            var opponentOwner = 2;
             
-            var fieldView = await _fieldFactory.CreateAsync(cancellationToken);
+            var fieldView = await _fieldViewFactory.CreateAsync(cancellationToken);
             var fieldGrid = _fieldGridFactory.Create(fieldView.Collider, FieldConfig.FIELD_ROWS, FieldConfig.FIELD_COLUMNS);
             fieldView.DebugView.SetPoints(fieldGrid);
             
@@ -41,23 +45,34 @@ namespace Game
             fieldView.DebugView.SetLines(debugMatrixLines);
             
             var entitiesBackgroundView = await _entitiesBackgroundFactory.CreateAsync(cancellationToken);
-            var entitiesDebugPositions = _entitiesBackgroundGridFactory.Create(entitiesBackgroundView.Collider, 7);
-            entitiesBackgroundView.DebugView.SetPoints(entitiesDebugPositions);
+            var entitiesPositions = _entitiesBackgroundGridFactory.Create(entitiesBackgroundView.Collider, FieldConfig.ENTITIES_COUNT);
+            entitiesBackgroundView.DebugView.SetPoints(entitiesPositions);
 
-            var entities = await 
-                _entityFactory.CreateAll(FieldConfig.ENTITIES_COUNT, entitiesDebugPositions, playerOwner, cancellationToken);
+            var userEntitiesModel = await 
+                _entityFactory.CreateAll(entitiesPositions, playerOwner, cancellationToken);
+
+            EntityPlacedModel[] prespawnPreset = null;//FieldConfig.CREATE_PRESPAWN_PRESET_1(opponentOwner);
             
-            var fieldModel = new FieldModel(fieldGrid,FieldConfig.PRESPAWN_PRESET_1);
-            var fieldViewModel = new FieldViewModel(fieldModel, entities
-                .Select(x=>x.viewModel));
+            var opponentEntitiesBackgroundView = await _entitiesBackgroundFactory.CreateOpponentAsync(cancellationToken);
+            var opponentEntitiesPositions =
+                _entitiesBackgroundGridFactory.Create(opponentEntitiesBackgroundView.Collider, 7);
+            var opponentEntitiesModel =
+                await _entityFactory.CreateAll(opponentEntitiesPositions,opponentOwner, prespawnPreset,
+                    fieldGrid, cancellationToken);
             
-            var existingEntities =
-                await _entityFactory.CreateExisting(fieldGrid, FieldConfig.PRESPAWN_PRESET_1, cancellationToken);
+            var fieldModel = new FieldModel(fieldGrid,prespawnPreset);
+            var fieldViewModel = new FieldViewModel(fieldModel, userEntitiesModel, opponentEntitiesModel);
+
+
+            await UniTask.Delay(TimeSpan.FromSeconds(3),cancellationToken: cancellationToken);
+            var controller = new UserEntitiesController(opponentEntitiesModel, fieldModel);
+            await controller.DoMoveAsync(3, new Vector2Int(1, 1), cancellationToken);
+
         }
 
         public void Dispose()
         {
-            _fieldFactory?.Dispose();
+            _fieldViewFactory?.Dispose();
         }
     }
 }

@@ -4,16 +4,14 @@ using UnityEngine;
 
 namespace Game.Entities
 {
-    public struct EntityPlacedModel : IPlaceableModelValue
+    public struct EntityPlacedModel
     {
         public ReadOnlyReactiveProperty<Vector2Int> GridPosition { get; }
-        public ReadOnlyReactiveProperty<int> Value { get; }
-        public ReadOnlyReactiveProperty<int> Owner { get; }
+        public EntityModel.EntityDataModel Data { get; }
 
         public EntityPlacedModel(int value, int owner, Vector2Int gridPosition)
         {
-            Value = new ReadOnlyReactiveProperty<int>(new ReactiveProperty<int>(value));
-            Owner = new ReadOnlyReactiveProperty<int>(new ReactiveProperty<int>(owner));
+            Data = new EntityModel.EntityDataModel(value, owner);
             GridPosition = new ReadOnlyReactiveProperty<Vector2Int>(new ReactiveProperty<Vector2Int>(gridPosition));
         }
     }

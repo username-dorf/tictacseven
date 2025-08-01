@@ -1,55 +1,28 @@
 using System;
-using Game.Field;
 using UniRx;
 using UnityEngine;
 
 namespace Game.Entities
 {
-   
-    public interface IEntityReleasePublisher : IReleasePublisher<IPlaceableModel>
-    {
-    }
-    
-    public class EntityViewModel: IEntityReleasePublisher, IDisposable
+    public class EntityViewModel: IDisposable
     {
         public ReadOnlyReactiveProperty<int> Value { get; }
-        public ReactiveProperty<bool> IsDragging { get; }
-        public ReactiveProperty<bool> IsSelected { get; }
-        
+        public ReadOnlyReactiveProperty<bool> IsMoving => 
+            _model.Transform.IsMoving;
         public ReadOnlyReactiveProperty<Vector3> Position => 
-            _model.Transform.Position.ToReadOnlyReactiveProperty();
-        public IObservable<IPlaceableModel> ReleaseCommand => _releaseCommand;
-
-
-        public Plane? DragPlane
-        {
-            get
-            {
-                if (!_fieldViewProvider.Initialized)
-                    return null;
-                return _fieldViewProvider.View.DragPlane;
-            }
-        }
-
+            _model.Transform.Position;
+        
         private CompositeDisposable _disposable;
-        private FieldViewProvider _fieldViewProvider;
         private EntityModel _model;
-        private ReactiveCommand<IPlaceableModel> _releaseCommand;
 
-        public EntityViewModel(EntityModel model, FieldViewProvider fieldViewProvider)
+        public EntityViewModel(EntityModel model)
         {
             _model = model;
-            _fieldViewProvider = fieldViewProvider;
             _disposable = new CompositeDisposable();
             
-            IsSelected = new ReactiveProperty<bool>(false);
-            IsDragging = new ReactiveProperty<bool>(false);
+            Value = new ReadOnlyReactiveProperty<int>(model.Data.Merit); //debug purpose
             
-            
-            Value = new ReadOnlyReactiveProperty<int>(model.Value);
-            _releaseCommand = new ReactiveCommand<IPlaceableModel>();
-            
-            IsSelected
+            _model.Transform.IsSelected
                 .Where(x => !x)
                 .Skip(1)
                 .Subscribe(_ => OnRelease())
@@ -59,37 +32,33 @@ namespace Game.Entities
         public void SetSelected(bool isSelected)
         {
             if(isSelected && !CanBeMoved())
-                return;
-            
-            IsSelected.Value = isSelected;
+                return; 
+            _model.Transform.SetSelected(isSelected);
         }
-        public void SetDragging(bool isDragging)
+        public void SetMoving(bool isDragging)
         {
             if(isDragging && !CanBeMoved())
                 return;
             
-            IsDragging.Value = isDragging;
+            _model.Transform.SetMoving(isDragging);
         }
         public void SetPosition(Vector3 position)
         {
             if(!CanBeMoved())
                 return;
             
-            _model.Transform.Position.Value = position;
+            _model.Transform.SetPosition(position);
         }
 
         private bool CanBeMoved()
         {
-            return !_model.Transform.IsLocked.Value;
+            return !_model.Transform.Moveable.Value;
         }
 
         private void OnRelease()
         {
-            if(!CanBeMoved())
-                return;
-            
             Debug.Log($"EntityViewModel: OnRelease called {_model.Transform.Position.Value}");
-            _releaseCommand.Execute(_model);
+            _model.Events.ReleaseCommand.Execute(_model);
         }
 
         public void Dispose()
@@ -97,9 +66,7 @@ namespace Game.Entities
             _disposable?.Dispose();
             _model.Dispose();
             Value?.Dispose();
-            IsDragging?.Dispose();
-            IsSelected?.Dispose();
-            _releaseCommand?.Dispose();
+            IsMoving?.Dispose();
         }
     }
 }

@@ -2,55 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Game.Entities;
+using Game.User;
 using UniRx;
 using UnityEngine;
 
 namespace Game.Field
 {
-    public interface IReleasePublisher<out T> where T : IPlaceableModel
-    {
-        IObservable<T> ReleaseCommand { get; }
-    }
-
-    public interface IPlaceableModelValue
-    {
-        ReadOnlyReactiveProperty<int> Value { get;}
-        ReadOnlyReactiveProperty<int> Owner { get; }
-    }
-    
-    public interface IPlaceableModel : IPlaceableModelValue
-    {
-        public interface ITransform
-        {
-            ReactiveProperty<Vector3> Position { get; }
-            ReadOnlyReactiveProperty<Vector3> InitialPosition { get; }
-            
-            /// <summary>
-            /// Indicates if it can be moved, usually after placement.
-            /// </summary>
-            ReadOnlyReactiveProperty<bool> IsLocked { get; }
-            void SetPosition(Vector3 position);
-            void SetLocked(bool locked);
-        }
-        
-        ITransform Transform { get; }
-    }
-    
     public class FieldViewModel : IDisposable
     {
         private CompositeDisposable _disposables;
         private FieldModel _model;
 
-        public FieldViewModel(FieldModel model, IEnumerable<IReleasePublisher<IPlaceableModel>> placeablePublishers)
+        public FieldViewModel(FieldModel model, params UserEntitiesModel[] userEntitiesModels)
         {
             _model = model;
             _disposables = new CompositeDisposable();
             
-            foreach (var pub in placeablePublishers)
+            foreach (var entitiesModel in userEntitiesModels)
             {
-                pub.ReleaseCommand
-                    .Subscribe(OnPlaceAttempt)
-                    .AddTo(_disposables);
+                foreach (var pub in entitiesModel.Entities)
+                {
+                    pub.Events.ReleaseCommand
+                        .Subscribe(OnPlaceAttempt)
+                        .AddTo(_disposables);
+                }
             }
         }
         
@@ -85,15 +60,16 @@ namespace Game.Field
                 var nearestPlace = _model.Entities[nearestCoors];
                 if (!CanPlace(nearestPlace, placeableModel))
                 {
-                    Debug.Log("Cannot place entity here: " + nearestPlace.Value.Value);
+                    Debug.Log("Cannot place entity here: " + nearestPlace.Data.Merit.Value);
                     ResetPlaceablePosition();
                     return false;
                 }
                 var placePosition = nearestPlace.Transform.Position.Value;
                 
+                _model.UpdateEntity(nearestCoors,new EntityModel(placeableModel.Data.Merit.Value,placeableModel.Data.Owner.Value, placePosition));
                 placeableModel.Transform.SetPosition(placePosition);
                 placeableModel.Transform.SetLocked(true);
-                _model.UpdateEntity(nearestCoors,new EntityModel(placeableModel.Value.Value,placeableModel.Owner.Value, placePosition));
+                placeableModel.Events.ReleaseApprovedCommand.Execute(placeableModel);
                 return true;
             }
             catch (Exception e)
@@ -117,7 +93,6 @@ namespace Game.Field
                 if (dist < minDist)
                 {
                     minDist = dist;
-                    Debug.Log($"Found closer place at ({coors}) with distance: {minDist} ");
                     key = coors;
                 }
             }
@@ -131,14 +106,14 @@ namespace Game.Field
         {
             if (!IsValidOwner(placeModel, placeableModel))
                 return false;
-            return placeModel.Value.Value < placeableModel.Value.Value;
+            return placeModel.Data.Merit.Value < placeableModel.Data.Merit.Value;
         }
 
         private bool IsValidOwner(EntityModel placeModel, IPlaceableModel placeableModel)
         {
             if (placeModel.IsEmptyOwner())
                 return true;
-            if (placeModel.Owner.Value == placeableModel.Owner.Value)
+            if (placeModel.Data.Owner.Value == placeableModel.Data.Owner.Value)
                 return false;
             return true;
         }
@@ -151,14 +126,14 @@ namespace Game.Field
             int columns = coords.Max(c => c.y) + 1;
             for (int row = 0; row < rows; row++)
             {
-                var first = dict[new Vector2Int(row, 0)].Owner.Value;
+                var first = dict[new Vector2Int(row, 0)].Data.Owner.Value;
                 if (first <= 0) 
                     continue;
 
                 bool allSame = true;
                 for (int col = 1; col < columns; col++)
                 {
-                    if (dict[new Vector2Int(row, col)].Owner.Value != first)
+                    if (dict[new Vector2Int(row, col)].Data.Owner.Value != first)
                     {
                         allSame = false;
                         break;
@@ -171,14 +146,14 @@ namespace Game.Field
 
             for (int col = 0; col < columns; col++)
             {
-                var first = dict[new Vector2Int(0, col)].Owner.Value;
+                var first = dict[new Vector2Int(0, col)].Data.Owner.Value;
                 if (first <= 0)
                     continue;
 
                 bool allSame = true;
                 for (int row = 1; row < rows; row++)
                 {
-                    if (dict[new Vector2Int(row, col)].Owner.Value != first)
+                    if (dict[new Vector2Int(row, col)].Data.Owner.Value != first)
                     {
                         allSame = false;
                         break;
@@ -195,13 +170,13 @@ namespace Game.Field
 
             //  main diagonal (0,0) → (_rows‑1,_cols‑1)
             {
-                var first = dict[new Vector2Int(0, 0)].Owner.Value;
+                var first = dict[new Vector2Int(0, 0)].Data.Owner.Value;
                 if (first > 0)
                 {
                     bool allSame = true;
                     for (int i = 1; i < rows; i++)
                     {
-                        if (dict[new Vector2Int(i, i)].Owner.Value != first)
+                        if (dict[new Vector2Int(i, i)].Data.Owner.Value != first)
                         {
                             allSame = false;
                             break;
@@ -214,14 +189,14 @@ namespace Game.Field
 
             // additional diagonal (_rows‑1,0) → (0,_cols‑1)
             {
-                var first = dict[new Vector2Int(0, columns - 1)].Owner.Value;
+                var first = dict[new Vector2Int(0, columns - 1)].Data.Owner.Value;
                 if (first > 0)
                 {
                     bool allSame = true;
                     for (int i = 1; i < rows; i++)
                     {
                         var key = new Vector2Int(i, columns - 1 - i);
-                        if (dict[key].Owner.Value != first)
+                        if (dict[key].Data.Owner.Value != first)
                         {
                             allSame = false;
                             break;
