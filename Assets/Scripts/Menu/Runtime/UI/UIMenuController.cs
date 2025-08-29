@@ -9,6 +9,7 @@ using Cysharp.Threading.Tasks;
 using Menu.Runtime.UIWorld;
 using Menu.UI;
 using Menu.UIWorld;
+using Multiplayer.UI.Windows.Views;
 using Zenject;
 
 namespace Menu.Runtime.UI
@@ -34,6 +35,16 @@ namespace Menu.Runtime.UI
             var classicButtonViewModel =
                 new ModeButtonViewModel(ct => _stateMachine.ChangeStateAsync<GameState>(CancellationToken.None));
             Provider.UI.ClassicButtonView.Initialize(classicButtonViewModel);
+
+            Provider.UI.BindMultiplayerButtons(menuFieldView.CreateHostButtonView,
+                menuFieldView.ConnectClientButtonView);
+            var createHostButtonViewModel =
+                new ModeButtonViewModel(ct => _windowsController.OpenAsync<UIWindowCreateHost>(ct));
+            Provider.UI.MultiplayerGroup.CreateHostButton.Initialize(createHostButtonViewModel);
+            
+            var connectClientButtonViewModel =
+                new ModeButtonViewModel(ct => _windowsController.OpenAsync<UIWindowConnectClient>(ct));
+            Provider.UI.MultiplayerGroup.ConnectClientButton.Initialize(connectClientButtonViewModel);
         }
 
         public void BindSubviewButtonViews(MenuFieldSubview subview)

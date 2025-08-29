@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Feature-Multiplayer-Prefabs-Windows
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Local-Feature-Multiplayer-Prefabs-Windows
+  m_GUID: a1a5fe5164e404411b07a6007bec50f8
+  m_SerializeEntries:
+  - m_GUID: 5cf8c63de2a6a460d8a222d83d021f74
+    m_Address: UIWindowCreateHost
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - window
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a72b725476d13420299e014e1fbb78d6
+    m_Address: UIWindowConnectClient
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - window
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7599375882458420585100f8e3078eae, type: 2}
+    - {fileID: 11400000, guid: 810bf3de88cef47d191497cb13a85c9a, type: 2}

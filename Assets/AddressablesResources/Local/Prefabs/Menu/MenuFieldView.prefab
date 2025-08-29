@@ -32,8 +32,11 @@ Transform:
   m_Children:
   - {fileID: 4547959948664308782}
   - {fileID: 3898478998766725701}
+  - {fileID: 1570884723310566460}
   - {fileID: 9153919624396900455}
+  - {fileID: 8345062775105635432}
   - {fileID: 3197710270684292842}
+  - {fileID: 7690288977151476204}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7942253510855600231
@@ -51,7 +54,164 @@ MonoBehaviour:
   <ClassicButtonView>k__BackingField: {fileID: 5286310752741872469}
   <ArcadeButtonView>k__BackingField: {fileID: 5876329709733899735}
   <MultiplayerButtonView>k__BackingField: {fileID: 6585761021155018706}
+  <CreateHostButtonView>k__BackingField: {fileID: 3948919833451335418}
+  <ConnectClientButtonView>k__BackingField: {fileID: 5492310525103032954}
+  <BackButtonView>k__BackingField: {fileID: 7800566838521443005}
   meshTransform: {fileID: 3994038971953460598}
+--- !u!1001 &187783035528156564
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2749905530971302000}
+    m_Modifications:
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7866766867732281610, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_Name
+      value: Button_Host
+      objectReference: {fileID: 0}
+    - target: {fileID: 7866766867732281610, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+--- !u!4 &1570884723310566460 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1682029556275579304, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+  m_PrefabInstance: {fileID: 187783035528156564}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3948919833451335418 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3771274338097732462, guid: b255b3609eac24d74ae58d0dae4afb2f, type: 3}
+  m_PrefabInstance: {fileID: 187783035528156564}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aca7c3000242e393962eefdd84e7dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Menu::Menu.UIWorld.UIWorldButtonView
+--- !u!1001 &2322418323934397661
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2749905530971302000}
+    m_Modifications:
+    - target: {fileID: 2938305999053611228, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_Name
+      value: Button_Client
+      objectReference: {fileID: 0}
+    - target: {fileID: 2938305999053611228, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.56
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+--- !u!114 &5492310525103032954 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7782915577958370983, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+  m_PrefabInstance: {fileID: 2322418323934397661}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aca7c3000242e393962eefdd84e7dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Menu::Menu.UIWorld.UIWorldButtonView
+--- !u!4 &8345062775105635432 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6049879424570359989, guid: 9c27cb61a38484f15bc5df204b72c2ce, type: 3}
+  m_PrefabInstance: {fileID: 2322418323934397661}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4077763203493946309
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -303,6 +463,83 @@ Transform:
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4238003422452624120, guid: d9166a02f6d644360ad8c0d43c1d9a2f, type: 3}
   m_PrefabInstance: {fileID: 7040598915319770410}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70aca7c3000242e393962eefdd84e7dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Menu::Menu.UIWorld.UIWorldButtonView
+--- !u!1001 &8130296842765889037
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2749905530971302000}
+    m_Modifications:
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.39
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3.68
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3329376249092056002, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_Name
+      value: Button_Back
+      objectReference: {fileID: 0}
+    - target: {fileID: 3329376249092056002, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+--- !u!4 &7690288977151476204 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1904451938141679585, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+  m_PrefabInstance: {fileID: 8130296842765889037}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7800566838521443005 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2059750123936242864, guid: d9f2cc83ebf2e48369515fa29193d694, type: 3}
+  m_PrefabInstance: {fileID: 8130296842765889037}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1

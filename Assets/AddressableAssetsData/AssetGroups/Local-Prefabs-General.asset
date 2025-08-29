@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Local-Prefabs
+  m_Name: Local-Prefabs-General
   m_EditorClassIdentifier: 
-  m_GroupName: Local-Prefabs
+  m_GroupName: Local-Prefabs-General
   m_GUID: c4815608ecdef470eafd550b42d38db8
   m_SerializeEntries:
   - m_GUID: 7324f7b88b92946129ded422bcb1395c

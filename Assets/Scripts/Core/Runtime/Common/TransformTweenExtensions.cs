@@ -1,3 +1,4 @@
+using System;
 using PrimeTween;
 using UnityEngine;
 
@@ -223,10 +224,106 @@ namespace Core.Common
 
             return seq;
         }
+
+
+        public static Sequence ScaleHideBounceAllAxes(
+            this Transform transform,
+            float duration = 0.5f,
+            float squashY = 0.1f, 
+            float xzOvershootMul = 0.1f, 
+            float xzUndershootMul = 0.25f, 
+            float endScaleFactor = 0.2f, 
+            Action<Transform> onHidden = null,
+            bool restoreBaseAfterHide = true 
+        )
+        {
+            var baseScale = transform.localScale;
+            var basePos = transform.localPosition;
+            float baseX = baseScale.x, baseY = baseScale.y, baseZ = baseScale.z;
+
+            Vector3 centerLocal = Vector3.zero;
+            var mf = transform.GetComponent<MeshFilter>();
+            var smr = transform.GetComponent<SkinnedMeshRenderer>();
+            var mr = transform.GetComponent<MeshRenderer>();
+            if (mf != null && mf.sharedMesh != null)
+            {
+                centerLocal = mf.sharedMesh.bounds.center;
+            }
+            else if (smr != null)
+            {
+                centerLocal = smr.localBounds.center;
+            }
+            else if (mr != null)
+            {
+                centerLocal = transform.InverseTransformPoint(mr.bounds.center);
+            }
+
+            Vector3 PosForScale(Vector3 targetScale)
+            {
+                Vector3 deltaS = new Vector3(baseX - targetScale.x, baseY - targetScale.y, baseZ - targetScale.z);
+                Vector3 localDelta =
+                    new Vector3(deltaS.x * centerLocal.x, deltaS.y * centerLocal.y, deltaS.z * centerLocal.z);
+                Vector3 worldDelta = transform.rotation * localDelta;
+                if (transform.parent != null)
+                    return basePos + transform.parent.InverseTransformVector(worldDelta);
+                return basePos + worldDelta;
+            }
+
+            float y_squash = baseY * (1f - squashY);
+            float y_stretch = baseY * (1f + squashY * 0.55f);
+            float xz_wide = baseX * (1f + squashY * xzOvershootMul);
+            float xz_narrow = baseX * (1f - squashY * xzUndershootMul);
+            float endXz = Mathf.Max(0.0001f, baseX * endScaleFactor);
+            float endY = Mathf.Max(0.0001f, baseY * endScaleFactor);
+
+            Vector3 sOver = new Vector3(xz_narrow, y_stretch, xz_narrow);
+            Vector3 sSquash = new Vector3(xz_wide, y_squash, xz_wide);
+            Vector3 sEnd = new Vector3(endXz, endY, endXz);
+
+            Vector3 pOver = PosForScale(sOver);
+            Vector3 pSquash = PosForScale(sSquash);
+            Vector3 pEnd = PosForScale(sEnd);
+
+            float t1 = duration * 0.25f;
+            float t2 = duration * 0.35f;
+            float t3 = Mathf.Max(0f, duration - (t1 + t2));
+
+            var seq = Sequence.Create();
+
+            seq.Group(Tween.ScaleX(transform, sOver.x, t1, Ease.OutSine));
+            seq.Group(Tween.ScaleY(transform, sOver.y, t1, Ease.OutSine));
+            seq.Group(Tween.ScaleZ(transform, sOver.z, t1, Ease.OutSine));
+            seq.Group(Tween.LocalPosition(transform, pOver, t1, Ease.OutSine));
+
+            seq.Chain(Tween.ScaleX(transform, sSquash.x, t2, Ease.InOutSine));
+            seq.Group(Tween.ScaleY(transform, sSquash.y, t2, Ease.InOutSine));
+            seq.Group(Tween.ScaleZ(transform, sSquash.z, t2, Ease.InOutSine));
+            seq.Group(Tween.LocalPosition(transform, pSquash, t2, Ease.InOutSine));
+
+            if (t3 > 0f)
+            {
+                seq.Chain(Tween.ScaleX(transform, sEnd.x, t3, Ease.InCubic));
+                seq.Group(Tween.ScaleY(transform, sEnd.y, t3, Ease.InCubic));
+                seq.Group(Tween.ScaleZ(transform, sEnd.z, t3, Ease.InCubic));
+                seq.Group(Tween.LocalPosition(transform, pEnd, t3, Ease.InCubic));
+            }
+
+            seq.OnComplete(() =>
+            {
+                onHidden?.Invoke(transform);
+
+                if (restoreBaseAfterHide)
+                {
+                    transform.localScale = baseScale;
+                    transform.localPosition = basePos;
+                }
+            });
+
+            return seq;
+        }
     }
 
-    // === те же утилиты, но public ===
-    public struct MeshBoundsLocal
+public struct MeshBoundsLocal
     {
         public Vector3 min, max, center;
     }
@@ -274,7 +371,6 @@ namespace Core.Common
             );
         }
 
-        // позиция для целевого скейла так, чтобы anchorLocal стоял на месте
         public static Vector3 PosForScaleKeepingAnchor(Transform t, Vector3 baseScale, Vector3 basePos,
             Vector3 anchorLocal, Vector3 targetScale)
         {
@@ -287,7 +383,6 @@ namespace Core.Common
             return basePos + worldDelta;
         }
 
-        // === Пресс/релиз ОТ ФИКСИРОВАННОЙ БАЗЫ ===
 
         public static Sequence PressBounceFromBase(
             this Transform button,
@@ -337,7 +432,6 @@ namespace Core.Common
             float xzRelax = 0.06f
         )
         {
-            // цель 1 (выплеск вверх) и цель 2 (база) считаются от ОДНОЙ базы
             float yAbove = baseScale.y * (1f + reboundUp);
             float xzNarrow = baseScale.x * (1f - xzRelax);
             Vector3 s1 = new Vector3(xzNarrow, yAbove, xzNarrow);
@@ -366,7 +460,6 @@ namespace Core.Common
             return seq;
         }
 
-        // Быстрый довод до pressed ОТ ФИКСИРОВАННОЙ БАЗЫ (для короткого тапа)
         public static Sequence QuickFinishToPressedFromBase(
             this Transform button,
             Vector3 baseScale, Vector3 basePos, Vector3 anchorLocal,

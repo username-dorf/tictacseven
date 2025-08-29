@@ -11,6 +11,8 @@ namespace Menu.Runtime.UI
         public UIWorldButtonView ClassicButtonView { get; private set; }
         public UIWorldButtonView SettingsButtonView { get; private set; }
         public UIWorldButtonView ProfileSettingsButtonView { get; private set; }
+        
+        public MultiplayerButtonsGroup MultiplayerGroup { get; private set; }
 
         public void BindClassicButtonView(UIWorldButtonView view)
         {
@@ -26,6 +28,22 @@ namespace Menu.Runtime.UI
         {
             ProfileSettingsButtonView = view;
         }
-        
+
+        public void BindMultiplayerButtons(UIWorldButtonView createHost, UIWorldButtonView connectClient)
+        {
+            MultiplayerGroup = new MultiplayerButtonsGroup(createHost, connectClient);
+        }
+
+        public class MultiplayerButtonsGroup
+        {
+            public UIWorldButtonView CreateHostButton { get; }
+            public UIWorldButtonView ConnectClientButton { get; }
+
+            public MultiplayerButtonsGroup(UIWorldButtonView createHostButton, UIWorldButtonView connectClientButton)
+            {
+                CreateHostButton = createHostButton;
+                ConnectClientButton = connectClientButton;
+            }
+        }
     }
 }

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Core.AssetProvider;
 using Core.Common;
 using Cysharp.Threading.Tasks;
 using Menu.Runtime.UI;
+using Menu.UI;
 using Menu.UIWorld;
+using UniRx;
 using UnityEngine;
 
 namespace Menu.Runtime.UIWorld
@@ -15,11 +18,26 @@ namespace Menu.Runtime.UIWorld
         [field: SerializeField] public UIWorldButtonView ArcadeButtonView { get; protected set; }
         [field: SerializeField] public UIWorldButtonView MultiplayerButtonView { get; protected set; }
         
+        [field: SerializeField] public UIWorldButtonView CreateHostButtonView { get; protected set; }
+        [field: SerializeField] public UIWorldButtonView ConnectClientButtonView { get; protected set; }
+        [field: SerializeField] public UIWorldButtonView BackButtonView { get; protected set; }
+        
         [SerializeField] private Transform meshTransform;
 
         private void Awake()
         {
             PrepareAnimation();
+        }
+
+        public void Initialize(ViewModel viewModel)
+        {
+            viewModel.State
+                .Skip(1)
+                .Subscribe(OnViewStateChanged)
+                .AddTo(this);
+            
+            MultiplayerButtonView.Initialize(new ModeButtonViewModel(ct => viewModel.CallMultiplayerButtonsSet()));
+            BackButtonView.Initialize(new ModeButtonViewModel(ct => viewModel.CallBaseButtonsSet()));
         }
 
         public async UniTask PlayScaleAsync(CancellationToken ct)
@@ -29,7 +47,7 @@ namespace Menu.Runtime.UIWorld
                 await meshTransform.ScaleBounceAllAxes(duration: 0.35f)
                     .ToUniTask(cancellationToken: ct);
                 
-                PlayButtonAppearAsync(ct)
+                PlayBaseButtonsAppearAsync(ct)
                     .Forget();
             }
             catch (OperationCanceledException)
@@ -45,33 +63,109 @@ namespace Menu.Runtime.UIWorld
             ClassicButtonView.gameObject.SetActive(false);
             ArcadeButtonView.gameObject.SetActive(false);
             MultiplayerButtonView.gameObject.SetActive(false);
+            
+            CreateHostButtonView.gameObject.SetActive(false);
+            ConnectClientButtonView.gameObject.SetActive(false);
+            BackButtonView.gameObject.SetActive(false);
         }
 
-        private async UniTask PlayButtonAppearAsync(CancellationToken ct)
+        private async UniTask PlayBaseButtonsAppearAsync(CancellationToken ct)
+        {
+            await CreateButtonsHideAsync(ct,CreateHostButtonView, ConnectClientButtonView, BackButtonView)
+                .ContinueWith(() =>
+                    CreateButtonsAppearAsync(ct, ClassicButtonView, ArcadeButtonView, MultiplayerButtonView));
+        }
+        private async UniTask PlayMultiplayerButtonsAppearAsync(CancellationToken ct)
+        {
+            await CreateButtonsHideAsync(ct, ClassicButtonView, ArcadeButtonView, MultiplayerButtonView)
+                .ContinueWith(() =>
+                    CreateButtonsAppearAsync(ct, CreateHostButtonView, ConnectClientButtonView, BackButtonView));
+        }
+
+        private async UniTask CreateButtonsAppearAsync(CancellationToken ct, params UIWorldButtonView[] buttons)
         {
             var initSpawnScaleFactor = 0; 
-            ClassicButtonView.gameObject.SetActive(true);
-            ArcadeButtonView.gameObject.SetActive(true);
-            MultiplayerButtonView.gameObject.SetActive(true);
-            
-            Func<UniTask> classicAppearAsync = ()=> ClassicButtonView.transform
-                .ScaleBounceAllAxes(spawnScaleFactor:initSpawnScaleFactor)
-                .ToUniTask(cancellationToken:ct);
-            
-            Func<UniTask> arcadeAppearAsync = ()=> ArcadeButtonView.transform
-                .ScaleBounceAllAxes(spawnScaleFactor:initSpawnScaleFactor)
-                .ToUniTask(cancellationToken:ct);
-            
-            Func<UniTask> multiplayerAppearAsync = ()=> MultiplayerButtonView.transform
-                .ScaleBounceAllAxes(spawnScaleFactor:initSpawnScaleFactor)
-                .ToUniTask(cancellationToken:ct);
+            var animations = new List<Func<UniTask>>();
+            foreach (var view in buttons)
+            {
+                view.gameObject.SetActive(true);
+                Func<UniTask> animation = ()=> view.transform
+                    .ScaleBounceAllAxes(spawnScaleFactor:initSpawnScaleFactor)
+                    .ToUniTask(cancellationToken:ct);
+                animations.Add(animation);
+            }
+
             try
             {
-                await UniTask.WhenAll(classicAppearAsync(), arcadeAppearAsync(), multiplayerAppearAsync());
+                await UniTask.WhenAll(animations.Select(x=>x.Invoke()));
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException e)
             {
                 
+            }
+        }
+
+        private async UniTask CreateButtonsHideAsync(CancellationToken ct, params UIWorldButtonView[] buttons)
+        {
+            var animations = new List<Func<UniTask>>();
+            foreach (var view in buttons)
+            {
+                Func<UniTask> animation = ()=> view.transform
+                    .ScaleHideBounceAllAxes(duration: 0.2f, onHidden: tr=>{tr.gameObject.SetActive(false);})
+                    .ToUniTask(cancellationToken:ct);
+                animations.Add(animation);
+            }
+
+            try
+            {
+                await UniTask.WhenAll(animations.Select(x=>x.Invoke()));
+            }
+            catch (OperationCanceledException e)
+            {
+                
+            }
+        }
+
+        private void OnViewStateChanged(State state)
+        {
+            using CancellationTokenSource cts = new CancellationTokenSource();
+            switch (state)
+            {
+                case State.Default:
+                    PlayBaseButtonsAppearAsync(cts.Token)
+                        .Forget();
+                    break;
+                case State.Multiplayer:
+                    PlayMultiplayerButtonsAppearAsync(cts.Token)
+                        .Forget();
+                    break;
+            }
+        }
+
+        public enum State
+        {
+            Default=0,
+            Multiplayer
+        }
+        public class ViewModel
+        {
+            public ReactiveProperty<State> State { get; private set; }
+
+            public ViewModel()
+            {
+                State = new ReactiveProperty<State>(MenuFieldView.State.Default);
+            }
+
+            public UniTask CallMultiplayerButtonsSet()
+            {
+                State.Value = MenuFieldView.State.Multiplayer;
+                return UniTask.CompletedTask;
+            }
+
+            public UniTask CallBaseButtonsSet()
+            {
+                State.Value = MenuFieldView.State.Default;
+                return UniTask.CompletedTask;
             }
         }
     }
@@ -97,6 +191,8 @@ namespace Menu.Runtime.UIWorld
             if (view is null)
                 throw new Exception("Failed to instantiate FieldView from prefab");
             _uiMenuController.BindButtonViews(view);
+            var viewModel = new MenuFieldView.ViewModel();
+            view.Initialize(viewModel);
 
             return view;
         }
