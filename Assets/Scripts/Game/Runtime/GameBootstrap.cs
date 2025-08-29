@@ -16,15 +16,14 @@ namespace Game
             _gameSubstateResolver = gameSubstateResolver;
         }
 
-        public async UniTask InitializeAsync(CancellationToken cancellationToken)
+        public async UniTask InitializeAsync(CancellationToken ct)
         {
             var substateMachine = _gameSubstateResolver.Resolve<IStateMachine>();
-            await substateMachine.ChangeStateAsync<InitialSubstate>();
+            await substateMachine.ChangeStateAsync<InitialSubstate>(ct);
         }
 
         public void Dispose()
         {
-            // TODO release managed resources here
         }
     }
 }

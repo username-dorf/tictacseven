@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Core.Data;
 using Cysharp.Threading.Tasks;
 using Game.Field;
 using Unity.Sentis;
@@ -17,7 +18,7 @@ namespace Game.User
         public override void InstallBindings()
         {
             Container.Bind<AgentAIModelAssetProvider>().AsSingle().NonLazy();
-            Container.Bind<AgentAIController>().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<AgentAIController>().AsSingle().NonLazy();
             Container.Bind<AgentThinkingAIController>().AsSingle().NonLazy();
         }
     }
@@ -67,15 +68,6 @@ namespace Game.User
                 Addressables.Release(_handle);
             }
         }
-    }
-
-    public enum PolicyDifficulty
-    {
-        Beginner,
-        Easy,
-        Normal,
-        Hard,
-        Insane
     }
 
     public sealed class PolicyBotSettings
@@ -281,8 +273,11 @@ namespace Game.User
             return logits;
         }
 
-        public void Dispose() => worker?.Dispose();
-
+        public void Dispose()
+        {
+            try { worker?.Dispose(); } catch {}
+            worker = null;
+        }
         private static System.Collections.Generic.List<(int v, int row, int col)> BuildValidActions(
             FieldModel field, UserEntitiesModel agentModel, int unityCurrentPlayer)
         {

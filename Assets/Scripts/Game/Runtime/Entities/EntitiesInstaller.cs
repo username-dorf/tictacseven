@@ -1,3 +1,4 @@
+using Core.Common;
 using Zenject;
 
 namespace Game.Entities
@@ -6,15 +7,18 @@ namespace Game.Entities
     {
         public override void InstallBindings()
         {
+            Container.Decorate<ISkinMaterialMapProvider>()
+                .With<GameSkinMaterialMapProvider>();
+            
             Container.Bind<EntitiesBackgroundFactory>()
                 .AsSingle();
             Container.Bind<EntitiesBackgroundGridFactory>()
                 .AsSingle();
-            Container.Bind<EntitiesValueSpriteProvider>()
+            Container.BindInterfacesAndSelfTo<EntitiesValueSpriteProvider>()
                 .AsSingle();
-            Container.Bind<EntitiesMaterialProvider>()
-                .AsSingle();
-            Container.Bind<EntityFactory>()
+            Container.BindInterfacesAndSelfTo<EntitiesMaterialAssetsProvider>()
+                .AsTransient();
+            Container.BindInterfacesAndSelfTo<EntityFactory>()
                 .AsSingle();
         }
     }

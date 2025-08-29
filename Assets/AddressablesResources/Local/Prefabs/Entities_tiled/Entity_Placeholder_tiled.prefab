@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96f983aa0ee2451799a1ff9d7ea007db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <Renderer>k__BackingField: {fileID: 6411265222804700016}
   <DebugView>k__BackingField: {fileID: 2225098742623207511}
-  renderer: {fileID: 6411265222804700016}
   collider: {fileID: 3875036478918725494}
 --- !u!114 &2225098742623207511
 MonoBehaviour:

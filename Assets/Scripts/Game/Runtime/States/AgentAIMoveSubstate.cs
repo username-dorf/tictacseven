@@ -1,4 +1,5 @@
 using System.Threading;
+using Core.Data;
 using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using Game.Field;
@@ -17,6 +18,7 @@ namespace Game.States
         private UserEntitiesModel _userEntitiesModel;
         private AgentAIController _agentAIController;
         private AgentThinkingAIController _agentThinkingAIController;
+        private AIUserRoundModel _userRoundModel;
 
         public AgentAIMoveSubstate(
             FieldModel fieldModel,
@@ -26,8 +28,10 @@ namespace Game.States
             UserEntitiesModel userEntitiesModel,
             AgentAIController agentAIController,
             AgentThinkingAIController agentThinkingAIController,
-            IGameSubstateResolver gameSubstateResolver) : base(gameSubstateResolver)
+            IGameSubstateResolver gameSubstateResolver,
+            AIUserRoundModel.Provider userRoundModelProvider) : base(gameSubstateResolver)
         {
+            _userRoundModel = userRoundModelProvider.Model;
             _agentThinkingAIController = agentThinkingAIController;
             _agentAIController = agentAIController;
             _userEntitiesModel = userEntitiesModel;
@@ -58,36 +62,39 @@ namespace Game.States
             await _controller.DoMoveAsync(v, new Vector2Int(row, col), ct);
         }
 
-        public override async UniTask EnterAsync(CancellationToken cancellationToken)
+        public override async UniTask EnterAsync(CancellationToken ct)
         {
-            Debug.Log("AgentAIMoveSubstate: EnterAsync");
 
             if (!_agentAIController.IsInitialized)
             {
-                await _agentAIController.InitializeAsync(cancellationToken);
+                await _agentAIController.InitializeAsync(ct);
                 _agentAIController.StartNewGame();
             }
-
-            int unityPlayer = 1;
+            _userRoundModel.SetAwaitingTurn(true);
             var (v, row, col) = _agentAIController.ChooseActionVRC(
                 _fieldModel,
                 _botEntitiesModel,
                 _userEntitiesModel,
-                unityPlayer, PolicyDifficulty.Normal);
+                _userRoundModel.Owner,
+                _userRoundModel.Difficulty);
 
             await _controller.DoMoveAsync(
                 v,
                 new Vector2Int(row, col),
-                cancellationToken);
-            await SubstateMachine.ChangeStateAsync<ValidateSubstate>();
+                ct);
+            await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
         }
 
 
         public override UniTask ExitAsync(CancellationToken _)
         {
-            Debug.Log("AgentAIMoveSubstate: ExitAsync");
-
+            _userRoundModel.SetAwaitingTurn(false);
             return UniTask.CompletedTask;
+        }
+
+        public override void Dispose()
+        {
+            
         }
     }
 }

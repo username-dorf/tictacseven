@@ -54,8 +54,9 @@ namespace Core.AssetProvider
                 IsLoaded = false;
                 throw;
             }
-            catch
+            catch(Exception e)
             {
+                Debug.LogError(e);
                 ReleaseHandle(_assetHandle);
                 IsLoaded = false;
                 throw;

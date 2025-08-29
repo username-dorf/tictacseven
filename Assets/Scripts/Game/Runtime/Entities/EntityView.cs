@@ -1,4 +1,5 @@
 using System;
+using Core.Common;
 using Game.Field;
 using UniRx;
 using UnityEngine;
@@ -6,10 +7,9 @@ using UnityEngine.InputSystem;
 
 namespace Game.Entities
 {
-    public class EntityView : MonoBehaviour
+    public class EntityView : MaterialApplicableView
     {
         [field: SerializeField] public EntityDebugView DebugView { get; private set; }
-        [SerializeField] private Renderer renderer;
         [SerializeField] private BoxCollider collider;
         private float _maxRayDistance = 100f;
         private bool _enableScaleAnimation = true;
@@ -136,14 +136,14 @@ namespace Game.Entities
         }
         private void OnMaterialChanged(Material material)
         {
-            renderer.material = material;
+            ChangeMaterial(material);
         }
         public void ChangeValueOnMaterial(Sprite sprite)
         {
             var mpb = new MaterialPropertyBlock();
-            renderer.GetPropertyBlock(mpb);
+            Renderer.GetPropertyBlock(mpb);
             mpb.SetTexture("_DigitTex", sprite.texture);
-            renderer.SetPropertyBlock(mpb);
+            Renderer.SetPropertyBlock(mpb);
         }
         private void OnVisibleChanged(bool isVisible)
         {

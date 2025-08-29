@@ -1,13 +1,18 @@
+using Core.UI.Components;
 using Game.Entities;
 using Game.Field;
 using Game.States;
+using Game.UI;
 using Game.User;
+using UnityEngine;
 using Zenject;
 
 namespace Game
 {
     public class GameMonoInstaller : MonoInstaller
     {
+        [SerializeField] private UIProvider<UIGame> uiGame; 
+
         public override void InstallBindings()
         {
             FieldInstaller.Install(Container);
@@ -18,17 +23,26 @@ namespace Game
                 .AsSingle();
             Container.BindInterfacesAndSelfTo<GameSubstateInstaller>()
                 .AsSingle();
+
+            Container.BindInterfacesTo<GameUIService>()
+                .AsSingle();
            
             
             
             Container.BindFactory<UserRoundModel,UserRoundModel.Factory>()
                 .AsSingle();
-            Container.Bind<UserRoundModel.Provider>()
+            Container.BindInterfacesAndSelfTo<UserRoundModel.Provider>()
                 .AsSingle();
             
             Container.BindFactory<AIUserRoundModel,AIUserRoundModel.Factory>()
                 .AsSingle();
-            Container.Bind<AIUserRoundModel.Provider>()
+            Container.BindInterfacesAndSelfTo<AIUserRoundModel.Provider>()
+                .AsSingle();
+            
+            Container.Bind<UIProvider<UIGame>>()
+                .FromInstance(uiGame)
+                .AsSingle();
+            Container.BindInterfacesTo<UIGameController>()
                 .AsSingle();
         }
     }

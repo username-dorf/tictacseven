@@ -22,6 +22,20 @@ MonoBehaviour:
     - base
     - material
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9923ad5ece1e42fe8639e8b90b3ae66
+    m_Address: URP_Tile_WhiteMint
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - material
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d81e28aec106e45ec80cc4a7917e8253
+    m_Address: URP_Tile_GoldenYellow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - material
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef3d2435fed9a43bf9ea1bb68c9fd03f
     m_Address: URP_Tile_Player
     m_ReadOnly: 0

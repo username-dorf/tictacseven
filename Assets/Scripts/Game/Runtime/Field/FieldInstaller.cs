@@ -6,11 +6,11 @@ namespace Game.Field
     {
         public override void InstallBindings()
         {
-            Container.Bind<FieldViewFactory>()
+            Container.BindInterfacesAndSelfTo<FieldViewFactory>()
                 .AsSingle();
-            Container.Bind<FieldGridFactory>()
+            Container.BindInterfacesAndSelfTo<FieldGridFactory>()
                 .AsSingle();
-            Container.Bind<FieldViewProvider>()
+            Container.BindInterfacesAndSelfTo<FieldViewProvider>()
                 .AsSingle();
         }
     }

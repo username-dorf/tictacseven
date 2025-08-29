@@ -35,18 +35,21 @@ namespace Game.States
 
         public override async UniTask EnterAsync(CancellationToken ct)
         {
-            Debug.Log("EndRoundSubstate: EnterAsync");
             _fieldModel.Drop();
             _opponentEntitiesModel.Drop();
             _userEntitiesModel.Drop();
             _opponentEntitiesPlaceholder.Drop();
             _userEntitiesPlaceholder.Drop();
-            await SubstateMachine.ChangeStateAsync<ValidateSubstate>();
+            await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
         }
 
         public override async UniTask ExitAsync(CancellationToken cancellationToken)
         {
-            Debug.Log("EndRoundSubstate: ExitAsync");
+        }
+
+        public override void Dispose()
+        {
+            
         }
     }
 }

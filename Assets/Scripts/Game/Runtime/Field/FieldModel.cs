@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Game.Field
 {
-    public class FieldModel
+    public class FieldModel: IDisposable
     {
         public IReadOnlyReactiveDictionary<Vector2Int, EntityModel> Entities => _entities;
         public IObservable<Vector2Int> OnEntityChanged => _onEntityChanged;
@@ -128,6 +128,13 @@ namespace Game.Field
             _entities?.Clear();
             _entities = CreateEmpty(_gridCache);
             _placebles.Clear();
+        }
+
+        public void Dispose()
+        {
+            _entities?.Dispose();
+            _placebles?.Dispose();
+            _onEntityChanged?.Dispose();
         }
     }
 }

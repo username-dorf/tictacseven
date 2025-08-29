@@ -76,7 +76,6 @@ namespace Game.Field
             catch (Exception e)
             {
                 ResetPlaceablePosition();
-                Debug.LogException(e);
                 return false;
             }
         }

@@ -1,5 +1,5 @@
+using System.Threading;
 using Core.StateMachine;
-using Cysharp.Threading.Tasks;
 using Zenject;
 
 namespace Core
@@ -14,7 +14,7 @@ namespace Core
         }
         public void Initialize()
         {
-            _stateMachine.ChangeStateAsync<BootstrapState>().Forget();
+            _stateMachine.ChangeStateAsync<BootstrapState>(CancellationToken.None);
         }
     }
 }

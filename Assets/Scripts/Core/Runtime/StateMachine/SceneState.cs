@@ -8,7 +8,7 @@ namespace Core.StateMachine
     public abstract class SceneState : IState
     {
         
-        public abstract UniTask EnterAsync(CancellationToken cancellationToken);
+        public abstract UniTask EnterAsync(CancellationToken ct);
         public abstract UniTask ExitAsync(CancellationToken cancellationToken);
         
         protected async UniTask LoadSceneAsync(string sceneName, CancellationToken cancellationToken)
@@ -27,6 +27,11 @@ namespace Core.StateMachine
                 }
                 throw;
             }
+        }
+
+        public void Dispose()
+        {
+            // TODO release managed resources here
         }
     }
 }

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Prefabs-Windows
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Local-Prefabs-Windows
+  m_GUID: d462de29b71f149e68552b1c28878e3e
+  m_SerializeEntries:
+  - m_GUID: 01d1c0a4c9b1a4ad6ab277a8266b5a27
+    m_Address: UIWindowRoundResult
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - window
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f71704393426466a899deb1e63a040c
+    m_Address: UIWindowProfileSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - window
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a97bd3ffa49184a5eb9d9f48f2892d42
+    m_Address: UIWindowSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - window
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 327559f8f53714a038f5ca7184ae61c1, type: 2}
+    - {fileID: 11400000, guid: a92b206d6218e4152918ab6849d81471, type: 2}

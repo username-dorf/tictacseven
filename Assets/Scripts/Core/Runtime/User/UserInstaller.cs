@@ -6,15 +6,18 @@ namespace Core.User
     {
         public override void InstallBindings()
         {
+            Container.BindInterfacesAndSelfTo<ProfileSpriteSetsProvider>()
+                .AsSingle();
+            
+            Container.BindInterfacesTo<PlayerPrefsUserPreferencesRepository>()
+                .AsSingle();
+            Container.BindInterfacesTo<UserPreferencesProvider>()
+                .AsSingle();
+            
             Container.Bind<NicknameFactory>()
                 .AsSingle();
             Container.BindFactory<UserModel, UserModel.Factory>()
                 .AsSingle();
-            
-            Container.Bind<UserModel>()
-                .AsCached();
-            
-            
         }
     }
 }

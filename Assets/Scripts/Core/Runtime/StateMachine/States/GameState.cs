@@ -14,13 +14,13 @@ namespace Core.StateMachine
     {
         private IGameBootstrapAsync _gameBootstrap;
 
-        public override async UniTask EnterAsync(CancellationToken cancellationToken)
+        public override async UniTask EnterAsync(CancellationToken ct)
         {
-            await LoadSceneAsync("Game", cancellationToken);
+            await LoadSceneAsync("Game", ct);
             
             var sceneContext = GameObject.FindFirstObjectByType<SceneContext>();
             _gameBootstrap = sceneContext.Container.Resolve<IGameBootstrapAsync>();
-            await _gameBootstrap.InitializeAsync(cancellationToken);
+            await _gameBootstrap.InitializeAsync(ct);
         }
 
         public override async UniTask ExitAsync(CancellationToken cancellationToken)

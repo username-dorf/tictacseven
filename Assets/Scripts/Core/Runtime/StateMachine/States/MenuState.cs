@@ -5,9 +5,9 @@ namespace Core.StateMachine
 {
     public class MenuState : SceneState
     {
-        public override async UniTask EnterAsync(CancellationToken cancellationToken)
+        public override async UniTask EnterAsync(CancellationToken ct)
         {
-            await LoadSceneAsync("Menu", cancellationToken);
+            await LoadSceneAsync("Menu", ct);
         }
 
         public override async UniTask ExitAsync(CancellationToken cancellationToken)

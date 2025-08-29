@@ -12,14 +12,18 @@ namespace Core.StateMachine
             _stateMachine = stateMachine;
         }
         
-        public async UniTask EnterAsync(CancellationToken cancellationToken)
+        public async UniTask EnterAsync(CancellationToken ct)
         {
-            await _stateMachine.ChangeStateAsync<GameState>(false);
+            await _stateMachine.ChangeStateAsync<PersistantResourcesLoadState>(ct);
         }
 
         public async UniTask ExitAsync(CancellationToken cancellationToken)
         {
         }
 
+        public void Dispose()
+        {
+            // TODO release managed resources here
+        }
     }
 }

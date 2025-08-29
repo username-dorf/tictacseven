@@ -1,3 +1,4 @@
+using System;
 using Zenject;
 
 namespace Core.StateMachine
@@ -11,6 +12,7 @@ namespace Core.StateMachine
         private void BindStates()
         {
             Container.InstallState<BootstrapState>();
+            Container.InstallState<PersistantResourcesLoadState>();
             Container.InstallState<MenuState>();
             Container.InstallState<GameState>();
         }
@@ -24,7 +26,14 @@ namespace Core.StateMachine
                 .WithId(typeof(TState).Name)
                 .To<TState>()
                 .AsSingle()
+                .OnInstantiated<TState>((ctx, state) =>
+                {
+                    var disp = ctx.Container.Resolve<DisposableManager>();
+                    if (state is IDisposable d)
+                        disp.Add(d);
+                })
                 .NonLazy();
+
         }
     }
 }

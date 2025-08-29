@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace Core.AssetProvider
 {
     public interface IAssetProvider
@@ -12,5 +14,10 @@ namespace Core.AssetProvider
     public interface IAssetsProvider<out T, in TKey>: IAssetProvider
     {
         T GetAsset(TKey key);
+    }
+
+    public interface IAssetReader<T, TKey>
+    {
+        ReadOnlyDictionary<TKey, T> GetAllAssets();
     }
 }

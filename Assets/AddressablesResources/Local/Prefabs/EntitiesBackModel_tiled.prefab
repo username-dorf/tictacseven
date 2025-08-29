@@ -61,6 +61,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -82,6 +84,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -135,6 +138,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Collider>k__BackingField: {fileID: 7453244521444865825}
   <DebugView>k__BackingField: {fileID: 7489254294983965697}
+  meshTransform: {fileID: 2197993085313570942}
 --- !u!114 &7489254294983965697
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,6 +231,11 @@ PrefabInstance:
 --- !u!4 &1653070800467290406 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 045bc5bdbd0ba4bb7ae54c2717d8d66a, type: 3}
+  m_PrefabInstance: {fileID: 1259418409952677581}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2197993085313570942 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1151388028547126963, guid: 045bc5bdbd0ba4bb7ae54c2717d8d66a, type: 3}
   m_PrefabInstance: {fileID: 1259418409952677581}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6933001830553045829 stripped

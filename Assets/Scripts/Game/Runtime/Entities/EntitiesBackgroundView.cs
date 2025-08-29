@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Core.AssetProvider;
+using Core.Common;
 using Cysharp.Threading.Tasks;
 using Game.User;
 using PrimeTween;
@@ -14,6 +15,19 @@ namespace Game.Entities
     {
         [field: SerializeField] public BoxCollider Collider { get; private set; }
         [field: SerializeField] public EntitiesBackgroundDebugView DebugView { get; private set; }
+        [SerializeField] private Transform meshTransform;
+
+        public async UniTask PlayScaleFromCorner(Vector2Int corner, CancellationToken ct)
+        {
+            try
+            {
+                await meshTransform.ScaleFromCorner(corner).ToUniTask(cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+                
+            }
+        }
 
         public class EntityPlaceholderViewsProvider
         {

@@ -6,6 +6,7 @@ namespace Game.Field
 {
     public class FieldConfig
     {
+        public const int ROUNDS_AMOUNT = 3;
         public const int FIELD_ROWS = 3;
         public const int FIELD_COLUMNS = 3;
 

@@ -25,7 +25,8 @@ namespace Game.Entities
             var prefab = await _assetProvider.LoadAssetAsync(cancellationToken);
             if(prefab is null)
                 return null;
-            return GameObject.Instantiate(prefab);
+            var instance = GameObject.Instantiate(prefab);
+            return instance;
         }
         public async UniTask<EntitiesBackgroundView.EntitiesPlaceholderPresenter> CreatePlaceholdersAsync(UserEntitiesModel userEntitiesModel, CancellationToken cancellationToken)
         {
@@ -44,6 +45,7 @@ namespace Game.Entities
         public void Dispose()
         {
             _assetProvider?.Dispose();
+            _placeholderViewFactory?.Dispose();
         }
         
         private class EntitiesBackgroundProvider : IDisposable

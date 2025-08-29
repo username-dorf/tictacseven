@@ -5,7 +5,7 @@ using UniRx;
 
 namespace Game.User
 {
-    public class UserEntitiesModel
+    public class UserEntitiesModel: IDisposable
     {
         public ReactiveCollection<IPlaceableModel> Entities { get; private set; }
         private List<IPlaceableModel> _cache;
@@ -32,6 +32,11 @@ namespace Game.User
             }
             Entities.Clear();
             Entities = new ReactiveCollection<IPlaceableModel>(_cache);
+        }
+
+        public void Dispose()
+        {
+            Entities?.Dispose();
         }
     }
 

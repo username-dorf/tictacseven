@@ -46,7 +46,7 @@ namespace Game.States
         public GameSubstateInstaller BindFieldModel(FieldModel fieldModel)
         {
             _subContainer
-                .Bind<FieldModel>()
+                .BindInterfacesAndSelfTo<FieldModel>()
                 .FromInstance(fieldModel);
             return this;
         }
@@ -56,6 +56,8 @@ namespace Game.States
             _subContainer
                 .Bind<UserEntitiesModel>()
                 .WithId(identifier)
+                .FromInstance(model);
+            _subContainer.BindInterfacesTo<UserEntitiesModel>()
                 .FromInstance(model);
             return this;
         }
@@ -81,6 +83,9 @@ namespace Game.States
             _subContainer.Bind<UserRoundModel>().WithId(GameSubstateSettings.ROUND_MODELS_ALIAS)
                 .FromInstance(roundModel)
                 .AsCached();
+
+            _subContainer.BindInterfacesTo<UserRoundModel>()
+                .FromInstance(roundModel);
             
             return this;
         }
@@ -121,13 +126,15 @@ namespace Game.States
                 container.InstallState<ValidateSubstate>();
                 container.InstallState<RoundResultSubstate>();
                 container.InstallState<RoundClearSubstate>();
+                container.InstallState<FinalRoundResultSubstateGameSubstate>();
                 
             }
         }
 
         public void Dispose()
         {
-            // TODO release managed resources here
+            var disp = _subContainer.TryResolve<DisposableManager>();
+            disp?.Dispose();
         }
     }
 }

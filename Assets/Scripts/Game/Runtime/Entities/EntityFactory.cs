@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using Core.AssetProvider;
+using Core.Common;
+using Core.Data;
 using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
@@ -28,22 +30,22 @@ namespace Game.Entities
         }
     }
 
-    public class EntityFactory
+    public class EntityFactory :IDisposable
     {
-        private AssetsProvider<EntityView, int> _assetsLoader;
+        private AssetsProvider<MaterialApplicableView, int> _assetsLoader;
         private FieldViewProvider _fieldViewProvider;
         private EntitiesValueSpriteProvider _valueSpriteProvider;
-        private EntitiesMaterialProvider _materialProvider;
+        private EntitiesMaterialAssetsProvider _materialAssetsProvider;
 
         public EntityFactory(
             FieldViewProvider fieldViewProvider,
             EntitiesValueSpriteProvider valueSpriteProvider,
-            EntitiesMaterialProvider materialProvider)
+            EntitiesMaterialAssetsProvider materialAssetsProvider)
         {
-            _materialProvider = materialProvider;
+            _materialAssetsProvider = materialAssetsProvider;
             _valueSpriteProvider = valueSpriteProvider;
             _fieldViewProvider = fieldViewProvider;
-            _assetsLoader = new EntitySingleAssetsLoader();
+            _assetsLoader = new EntitySingleAssetsProvider();
         }
 
         public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner,
@@ -120,11 +122,11 @@ namespace Game.Entities
             Vector3 position, CancellationToken cancellationToken)
         {
             var viewPrefab = _assetsLoader.GetAsset(model.Data.Merit.Value);
-            var view = GameObject.Instantiate(viewPrefab, position,
+            var view = (EntityView)GameObject.Instantiate(viewPrefab, position,
                 Quaternion.identity);
             
-            var materialId = model.Data.Owner.Value == 2 ? MaterialId.User : MaterialId.Opponent;
-            var material = _materialProvider.Get(materialId);
+            var materialId = model.Data.Owner.Value == 2 ? MaterialId.Default : MaterialId.Opponent;
+            var material = _materialAssetsProvider.Get(materialId);
             var valueSprite = _valueSpriteProvider.GetAsset(model.Data.Merit.Value);
             var viewModel = new EntityViewModel(model, valueSprite, material);
             view.Initialize(viewModel, _fieldViewProvider);
@@ -133,37 +135,14 @@ namespace Game.Entities
 
         private async UniTask WarmupAllAsync(EntityViewConfig config, CancellationToken ct)
         {
-            var materialsTask = _materialProvider.LoadAll(ct, config.SpriteCollection);
+            var materialsTask = _materialAssetsProvider.LoadAll(ct, config.SpriteCollection);
             var spritesTask = _valueSpriteProvider.LoadAll(ct, config.SpriteCollection);
             var assetsTask = _assetsLoader.LoadAssets(ct, config.Collection);
 
             await UniTask.WhenAll(materialsTask, assetsTask, spritesTask);
         }
 
-        private class EntitySingleAssetsLoader : AssetsProvider<EntityView, int>
-        {
-            public const string ASSET_PATH = "Entity_Base_tiled";
-
-            public EntitySingleAssetsLoader()
-                : base(SelectKey, ResolveKey, true)
-            {
-            }
-
-            public override UniTask LoadAssets(CancellationToken ct, params string[] assetKeys)
-            {
-                return base.LoadAssets(ct, ASSET_PATH);
-            }
-
-            public static int SelectKey(EntityView gameObject)
-            {
-                return 1;
-            }
-
-            public static int ResolveKey(int key)
-            {
-                return 1;
-            }
-        }
+        
 
         public sealed class EntityCollectionAssetsLoader : AssetsProvider<EntityView, int>
         {
@@ -213,6 +192,13 @@ namespace Game.Entities
 
                 await base.LoadAssets(ct, keys);
             }
+        }
+
+        public void Dispose()
+        {
+            _assetsLoader?.Dispose();
+            _valueSpriteProvider?.Dispose();
+            _materialAssetsProvider?.Dispose();
         }
     }
 }

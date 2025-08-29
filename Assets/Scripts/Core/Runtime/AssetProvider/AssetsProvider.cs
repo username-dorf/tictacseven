@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Core.AssetProvider
 {
-    public abstract class AssetsProvider<A, TKey> : IAssetsLoader, IAssetsProvider<A, TKey>, IDisposable
+    public abstract class AssetsProvider<A, TKey> : IAssetsLoader, IAssetsProvider<A, TKey>, IAssetReader<A,TKey>
         where A : UnityEngine.Object
     {
         public bool IsLoaded { get; protected set; }
@@ -21,7 +22,7 @@ namespace Core.AssetProvider
         private readonly bool _aIsComponent;
         private AsyncOperationHandle<IList<A>> _handleA;
         private AsyncOperationHandle<IList<GameObject>> _handleGO;
-        private Dictionary<TKey, A> _assets;
+        protected Dictionary<TKey, A> _assets;
 
         protected AssetsProvider(
             Func<A, TKey> keySelector,
@@ -165,8 +166,9 @@ namespace Core.AssetProvider
                 IsLoaded = false;
                 throw;
             }
-            catch
+            catch(Exception e)
             {
+                Debug.LogError(e);
                 ReleaseAll();
                 IsLoaded = false;
                 throw;
@@ -208,12 +210,18 @@ namespace Core.AssetProvider
                 IsLoaded = false;
                 throw;
             }
-            catch
+            catch (Exception e)
             {
+                Debug.LogError(e);
                 ReleaseAll();
                 IsLoaded = false;
                 throw;
             }
+        }
+
+        public ReadOnlyDictionary<TKey, A> GetAllAssets()
+        {
+            return new ReadOnlyDictionary<TKey, A>(_assets);
         }
     }
 }

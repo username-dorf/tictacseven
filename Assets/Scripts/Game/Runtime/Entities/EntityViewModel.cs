@@ -30,7 +30,6 @@ namespace Game.Entities
             _disposable = new CompositeDisposable();
             
             Value = new ReadOnlyReactiveProperty<int>(model.Data.Merit); //debug purpose
-            Material = new ReactiveProperty<Material>();
             ValueSprite = new ReactiveProperty<Sprite>(valueSprite);
             Material = new ReactiveProperty<Material>(material);
             

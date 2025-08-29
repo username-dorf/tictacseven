@@ -14,9 +14,11 @@ namespace Game.States
             SubstateMachine = substateResolverFactory.Resolve<IStateMachine>();
         }
 
-        public abstract UniTask EnterAsync(CancellationToken cancellationToken);
+        public abstract UniTask EnterAsync(CancellationToken ct);
 
         public abstract UniTask ExitAsync(CancellationToken cancellationToken);
+
+        public abstract void Dispose();
     }
     
     public abstract class GameSubstate<TPayload> : GameSubstate, IPayloadedState<TPayload>

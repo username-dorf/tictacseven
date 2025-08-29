@@ -15,13 +15,28 @@ MonoBehaviour:
   m_GroupName: Local-Prefabs
   m_GUID: c4815608ecdef470eafd550b42d38db8
   m_SerializeEntries:
-  - m_GUID: 53319adccd2f746d8b84765f3e470045
-    m_Address: FieldModel
+  - m_GUID: 7324f7b88b92946129ded422bcb1395c
+    m_Address: EntitiesBackModel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7324f7b88b92946129ded422bcb1395c
-    m_Address: EntitiesBackModel
+  - m_GUID: 9acfe0908c18240ed866c8d9973c39f3
+    m_Address: UIEntitySkinView
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c299a1d8d6c7c4fba9e447c7dfcef885
+    m_Address: SkinPreviewCamera
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c57e5e875dda542788d868fc14848319
+    m_Address: MenuFieldSubview
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f95ed5ea4acbb43e8b9cd392872d1075
+    m_Address: MenuFieldView
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
