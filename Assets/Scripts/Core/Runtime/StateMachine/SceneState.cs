@@ -7,6 +7,7 @@ namespace Core.StateMachine
 {
     public abstract class SceneState : IState
     {
+        
         public abstract UniTask EnterAsync(CancellationToken cancellationToken);
         public abstract UniTask ExitAsync(CancellationToken cancellationToken);
         

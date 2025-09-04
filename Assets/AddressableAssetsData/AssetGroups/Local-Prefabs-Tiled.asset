@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Prefabs-Tiled
+  m_EditorClassIdentifier: 
+  m_GroupName: Local-Prefabs-Tiled
+  m_GUID: 18b53c11f009242019c60638667d0405
+  m_SerializeEntries:
+  - m_GUID: 15007ea2f9d224318bc1af7e056de0be
+    m_Address: Entity_Placeholder_tiled
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3222fc90accfb49d191627fd5752b34e
+    m_Address: Entity_Base_tiled
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4bc4a3cb380424b04aa1076892aa87eb
+    m_Address: EntitiesBackModel_tiled
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a68615e1bc144cdba7d3cba9d315d2d
+    m_Address: FieldModel_tiled
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 4cfa40dcf90f64e2586ee7643268966d, type: 2}
+    - {fileID: 11400000, guid: aa155c22f5fff4968bb95c732c424318, type: 2}

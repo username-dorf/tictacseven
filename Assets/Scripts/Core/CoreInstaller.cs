@@ -1,4 +1,5 @@
 using Core.StateMachine;
+using Core.User;
 using Zenject;
 
 namespace Core
@@ -8,7 +9,7 @@ namespace Core
         public override void InstallBindings()
         {
             StateMachineInstaller.Install(Container);
-            
+            UserInstaller.Install(Container);
             BindBootstrap(Container);
         }
 

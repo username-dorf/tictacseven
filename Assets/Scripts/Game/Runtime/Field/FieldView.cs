@@ -31,7 +31,7 @@ namespace Game.Field
             Vector3 planePoint = Collider != null
                 ? Collider.bounds.center + Collider.bounds.extents
                 : transform.position;
-            DragPlane = new Plane(Vector3.up, planePoint);
+            DragPlane = new Plane(Vector3.up, planePoint+new Vector3(0,0.5f,0));
         }
     }
 }

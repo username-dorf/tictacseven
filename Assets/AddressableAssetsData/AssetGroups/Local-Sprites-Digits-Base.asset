@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Sprites-Digits-Base
+  m_EditorClassIdentifier: 
+  m_GroupName: Local-Sprites-Digits-Base
+  m_GUID: 12ddebc2cf0bf4ac5a1dcd725f34caf0
+  m_SerializeEntries:
+  - m_GUID: 0ad6cafc8ea7b478fb455c9a9c7408b0
+    m_Address: 0_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 184767d41cd634f719199ceee6bafda0
+    m_Address: 4_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 293330afb6a89410aa7961a5d9117ad6
+    m_Address: 2_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56970b899c37041cd902ea85ad1a091d
+    m_Address: 1_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5af652d3efa7744349003624b4190257
+    m_Address: 3_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6582736f6e0ae4fe98fcb951975c5f02
+    m_Address: 9_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2b454f66d099415caac1351533855f3
+    m_Address: 8_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dee655da457fd45a8a15884341cdb916
+    m_Address: 5_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e5a86ca785bf244cb9d5a8cda4343f2f
+    m_Address: 6_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb3774052866f4a55b25eeb29a9ef99d
+    m_Address: 7_icon
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - base
+    - digit
+    - sprite
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c84d8bee609e04223aa0fba39e22f3ba, type: 2}
+    - {fileID: 11400000, guid: ca99bd89122354508b041a8d0036b7d2, type: 2}

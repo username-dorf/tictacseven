@@ -7,11 +7,31 @@ namespace Game.User
 {
     public class UserEntitiesModel
     {
-        public ReactiveCollection<IPlaceableModel> Entities { get; }
+        public ReactiveCollection<IPlaceableModel> Entities { get; private set; }
+        private List<IPlaceableModel> _cache;
         
         public UserEntitiesModel(IEnumerable<IPlaceableModel> placeablePublishers)
         {
+            _cache = new List<IPlaceableModel>(placeablePublishers);
             Entities = new ReactiveCollection<IPlaceableModel>(placeablePublishers);
+        }
+
+        public UserEntitiesModel SetInteractionAll(bool value)
+        {
+            foreach (var placeableModel in Entities)
+            {
+                placeableModel.Transform.SetInteractable(value);
+            }
+            return this;
+        }
+        public void Drop()
+        {
+            foreach (var placeableModel in _cache)
+            {
+                placeableModel.Transform.Reset();
+            }
+            Entities.Clear();
+            Entities = new ReactiveCollection<IPlaceableModel>(_cache);
         }
     }
 

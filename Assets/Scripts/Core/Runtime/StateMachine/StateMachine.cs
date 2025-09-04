@@ -7,13 +7,32 @@ namespace Core.StateMachine
 {
     public interface IStateMachine
     {
+        IState CurrentState { get; }
         UniTask ChangeStateAsync<T>() where T : IState;
         UniTask ChangeStateAsync<T>(bool awaitExiting) where T : IState;
+        
+        UniTask ChangeStateAsync<T>(T state) where T : IState;
+        UniTask ChangeStateAsync<T>(T state, bool awaitExiting) where T : IState;
+        
+        
+        UniTask ChangeStateAsync<TState, TPayload>(TPayload payload) 
+            where TState : IState, IPayloadedState<TPayload>;
+
+        UniTask ChangeStateAsync<TState, TPayload>(TPayload payload, bool awaitExiting) 
+            where TState : IState, IPayloadedState<TPayload>;
+
+        UniTask ChangeStateAsync<TState, TPayload>(TState state, TPayload payload) 
+            where TState : IState, IPayloadedState<TPayload>;
+
+        UniTask ChangeStateAsync<TState, TPayload>(TState state, TPayload payload, bool awaitExiting) 
+            where TState : IState, IPayloadedState<TPayload>;
     }
 
 
     public class StateMachine : IStateMachine, IDisposable
     {
+        public IState CurrentState => _currentState;
+        
         private IState _currentState;
         private readonly StateFactory _stateFactory;
         private readonly CancellationTokenSource _cancellationTokenSource;
@@ -48,7 +67,27 @@ namespace Core.StateMachine
                 await ProcessStateQueue();
             }
         }
-        
+
+        public UniTask ChangeStateAsync<T>(T state) where T : IState
+        {
+            return ChangeStateAsync(state, true);
+        }
+
+        public async UniTask ChangeStateAsync<T>(T state, bool awaitExiting) where T : IState
+        {
+            var transitionTask = new Func<UniTask>(async () =>
+            {
+                await ChangeStateAsync(state,awaitExiting);
+            });
+
+            _stateTransitionQueue.Enqueue(transitionTask);
+
+            if (!_isTransitioning)
+            {
+                await ProcessStateQueue();
+            }
+        }
+
         private async UniTask ProcessStateQueue()
         {
             while (_stateTransitionQueue.TryDequeue(out var transitionTask))
@@ -85,6 +124,50 @@ namespace Core.StateMachine
             catch (OperationCanceledException e)
             {
             }
+        }
+        
+        public UniTask ChangeStateAsync<TState, TPayload>(TPayload payload)
+            where TState : IState, IPayloadedState<TPayload>
+        {
+            return ChangeStateAsync<TState, TPayload>(payload, awaitExiting: true);
+        }
+
+        public async UniTask ChangeStateAsync<TState, TPayload>(TPayload payload, bool awaitExiting)
+            where TState : IState, IPayloadedState<TPayload>
+        {
+            var state = _stateFactory.Create(typeof(TState).Name);
+
+            var payloaded = (IPayloadedState<TPayload>)state;
+            payloaded.SetPayload(payload);
+
+            var transitionTask = new Func<UniTask>(async () =>
+            {
+                await ChangeStateAsync(state, awaitExiting);
+            });
+
+            _stateTransitionQueue.Enqueue(transitionTask);
+            if (!_isTransitioning)
+                await ProcessStateQueue();
+        }
+        public UniTask ChangeStateAsync<TState, TPayload>(TState state, TPayload payload)
+            where TState : IState, IPayloadedState<TPayload>
+        {
+            return ChangeStateAsync(state, payload, awaitExiting: true);
+        }
+
+        public async UniTask ChangeStateAsync<TState, TPayload>(TState state, TPayload payload, bool awaitExiting)
+            where TState : IState, IPayloadedState<TPayload>
+        {
+            state.SetPayload(payload);
+
+            var transitionTask = new Func<UniTask>(async () =>
+            {
+                await ChangeStateAsync(state, awaitExiting);
+            });
+
+            _stateTransitionQueue.Enqueue(transitionTask);
+            if (!_isTransitioning)
+                await ProcessStateQueue();
         }
 
         public void Dispose()

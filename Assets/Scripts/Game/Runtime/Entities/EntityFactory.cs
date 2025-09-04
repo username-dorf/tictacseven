@@ -1,56 +1,80 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+using Core.AssetProvider;
 using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using Zenject;
 
 namespace Game.Entities
 {
-    public class EntityFactory
+    public class EntityViewConfig
     {
         private const string DEFAULT_COLLECTION = "chess";
+        private const string DEFAULT_VALUE_SPRITE_COLLECTION = "base";
+        public string Collection { get; }
+        public string SpriteCollection { get; }
 
-        private readonly object _loadLock = new();
-        private Task<EntityView[]> _loadingTask;
-        private EntityView[] _loadedCollectionViews;
-        private EntityAssetProvider _assetProvider;
-        private FieldViewProvider _fieldViewProvider;
-
-        public EntityFactory(FieldViewProvider fieldViewProvider)
+        public EntityViewConfig(string collection, string spriteCollection)
         {
-            _fieldViewProvider = fieldViewProvider;
-            _assetProvider = new EntityAssetProvider();
+            Collection = collection;
+            SpriteCollection = spriteCollection;
         }
-        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner, CancellationToken cancellationToken)
+
+        public static EntityViewConfig Default()
         {
+            return new EntityViewConfig(DEFAULT_COLLECTION, DEFAULT_VALUE_SPRITE_COLLECTION);
+        }
+    }
+
+    public class EntityFactory
+    {
+        private AssetsProvider<EntityView, int> _assetsLoader;
+        private FieldViewProvider _fieldViewProvider;
+        private EntitiesValueSpriteProvider _valueSpriteProvider;
+        private EntitiesMaterialProvider _materialProvider;
+
+        public EntityFactory(
+            FieldViewProvider fieldViewProvider,
+            EntitiesValueSpriteProvider valueSpriteProvider,
+            EntitiesMaterialProvider materialProvider)
+        {
+            _materialProvider = materialProvider;
+            _valueSpriteProvider = valueSpriteProvider;
+            _fieldViewProvider = fieldViewProvider;
+            _assetsLoader = new EntitySingleAssetsLoader();
+        }
+
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner,
+            CancellationToken cancellationToken)
+        {
+            await WarmupAllAsync(EntityViewConfig.Default(), cancellationToken);
+
             var models = new EntityModel[positions.Length];
             for (int i = 0; i < positions.Length; i++)
             {
                 models[i] = new EntityModel(i + 1, owner, positions[i]);
             }
-            var entities= await CreateAll(models, cancellationToken);
+
+            var entities = await CreateAll(models, cancellationToken);
             var userEntitiesModel = new UserEntitiesModel(entities
                 .Select(x => (IPlaceableModel) x.model));
             var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
             return userEntitiesModel;
         }
 
-        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner, EntityPlacedModel[] placedModels,
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner,
+            EntityPlacedModel[] placedModels,
             Vector3[,] gridPositions, CancellationToken cancellationToken)
         {
             if (placedModels is null || placedModels.Length == 0)
             {
                 return await CreateAll(positions, owner, cancellationToken);
             }
-            
-            
+
+            await WarmupAllAsync(EntityViewConfig.Default(), cancellationToken);
+
             var models = new EntityModel[positions.Length];
             for (var i = 0; i < models.Length; i++)
             {
@@ -61,15 +85,16 @@ namespace Game.Entities
                     var position = gridPositions[coors.x, coors.y];
                     models[i] = new EntityModel(placedModel.Data.Merit.Value, placedModel.Data.Owner.Value,
                         position);
-                    models[i].Transform.SetLocked(true);
+                    models[i].Transform.SetMoveable(false);
                 }
                 else
                 {
                     models[i] = new EntityModel(i + 1, owner, positions[i]);
                 }
             }
+
             var entities = await CreateAll(models, cancellationToken);
-            var availableEntities = entities.Where(x => !x.model.Transform.Moveable.Value);
+            var availableEntities = entities.Where(x => !x.model.Transform.IsMoveable.Value);
             var userEntitiesModel = new UserEntitiesModel(availableEntities
                 .Select(x => (IPlaceableModel) x.model));
             var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
@@ -77,100 +102,116 @@ namespace Game.Entities
         }
 
         private async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
-             CancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
             var modelsCount = models.Length;
-            
+
             var tasks = new UniTask<(EntityViewModel viewModel, EntityModel model)>[modelsCount];
 
             for (int i = 0; i < modelsCount; i++)
             {
                 tasks[i] = Create(models[i], models[i].Transform.InitialPosition.Value, cancellationToken);
             }
+
             return await UniTask.WhenAll(tasks);
         }
-        private async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model, Vector3 position, CancellationToken cancellationToken)
+
+        private async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model,
+            Vector3 position, CancellationToken cancellationToken)
         {
-            if (_loadedCollectionViews == null)
-            {
-                lock (_loadLock)
-                {
-                    if (_loadingTask is null || _loadingTask.Status != TaskStatus.Running)
-                    {
-                        _loadingTask = _assetProvider.LoadCollectionAssets(DEFAULT_COLLECTION, cancellationToken);
-                    }
-                }
-                _loadedCollectionViews = await _loadingTask;
-            }
-            var view = GameObject.Instantiate(_loadedCollectionViews[model.Data.Merit.Value-1], position, Quaternion.identity);
+            var viewPrefab = _assetsLoader.GetAsset(model.Data.Merit.Value);
+            var view = GameObject.Instantiate(viewPrefab, position,
+                Quaternion.identity);
             
-            //TODO: set base scale for collection
-            view.SetScale(0.8f);
-            
-            var viewModel = new EntityViewModel(model);
-            view.Initialize(viewModel,_fieldViewProvider);
+            var materialId = model.Data.Owner.Value == 2 ? MaterialId.User : MaterialId.Opponent;
+            var material = _materialProvider.Get(materialId);
+            var valueSprite = _valueSpriteProvider.GetAsset(model.Data.Merit.Value);
+            var viewModel = new EntityViewModel(model, valueSprite, material);
+            view.Initialize(viewModel, _fieldViewProvider);
             return (viewModel, model);
         }
 
-        private class EntityAssetProvider : IDisposable
+        private async UniTask WarmupAllAsync(EntityViewConfig config, CancellationToken ct)
         {
-            private const string COLLECTION_PATH_TEMPLATE = "0%value%_%collection%";
-            
-            private AsyncOperationHandle<GameObject>[] _assetHandles;
+            var materialsTask = _materialProvider.LoadAll(ct, config.SpriteCollection);
+            var spritesTask = _valueSpriteProvider.LoadAll(ct, config.SpriteCollection);
+            var assetsTask = _assetsLoader.LoadAssets(ct, config.Collection);
 
-            public async Task<EntityView[]> LoadCollectionAssets(string collection, CancellationToken cancellationToken, int length = 7)
+            await UniTask.WhenAll(materialsTask, assetsTask, spritesTask);
+        }
+
+        private class EntitySingleAssetsLoader : AssetsProvider<EntityView, int>
+        {
+            public const string ASSET_PATH = "Entity_Base_tiled";
+
+            public EntitySingleAssetsLoader()
+                : base(SelectKey, ResolveKey, true)
             {
-                var tasks = new UniTask<(EntityView view, AsyncOperationHandle<GameObject> handle)>[length];
-
-                for (int i = 0; i < length; i++)
-                {
-                    tasks[i] = LoadAsset(collection, i+1, cancellationToken);
-                }
-
-                var results = await UniTask.WhenAll(tasks);
-                _assetHandles = results.Select(x => x.handle).ToArray();
-                
-                if (_assetHandles.Any(handle => !handle.IsValid()))
-                    throw new Exception("Failed to load some assets from collection: " + collection);
-                if(results.Any(x=>x.view is null))
-                    throw new Exception("Failed to load some assets from collection: " + collection);
-
-                return results
-                    .Select(tuple => tuple.view)
-                    .ToArray();
-            }
-            
-            private async UniTask<(EntityView,AsyncOperationHandle<GameObject>)> LoadAsset(string collection, int index, CancellationToken cancellationToken)
-            {
-                var path = COLLECTION_PATH_TEMPLATE
-                    .Replace("%value%", index.ToString())
-                    .Replace("%collection%", collection);
-                
-                var handle = Addressables.LoadAssetAsync<GameObject>(path);
-                try
-                {
-                    await handle.ToUniTask(cancellationToken: cancellationToken);
-                    return (handle.Result.GetComponent<EntityView>(),handle);
-                }
-                catch (OperationCanceledException)
-                {
-                    return (null,default);
-                }
             }
 
-            public void Dispose()
+            public override UniTask LoadAssets(CancellationToken ct, params string[] assetKeys)
             {
-                if (_assetHandles != null)
+                return base.LoadAssets(ct, ASSET_PATH);
+            }
+
+            public static int SelectKey(EntityView gameObject)
+            {
+                return 1;
+            }
+
+            public static int ResolveKey(int key)
+            {
+                return 1;
+            }
+        }
+
+        public sealed class EntityCollectionAssetsLoader : AssetsProvider<EntityView, int>
+        {
+            private const string TEMPLATE = "0{0}_{1}";
+            private const int LENGTH = 7;
+
+            public EntityCollectionAssetsLoader()
+                : base(SelectKey)
+            {
+            }
+
+            private static int SelectKey(EntityView go)
+            {
+                var n = go ? go.name : null;
+                if (string.IsNullOrEmpty(n)) return 0;
+
+                int v = 0;
+                bool any = false;
+                for (int i = 0; i < n.Length; i++)
                 {
-                    foreach (var handle in _assetHandles)
+                    char c = n[i];
+                    if (char.IsDigit(c))
                     {
-                        if (handle.IsValid())
-                        {
-                            Addressables.Release(handle);
-                        }
+                        any = true;
+                        v = v * 10 + (c - '0');
                     }
-                    _assetHandles = null;
+                    else
+                    {
+                        if (any) break;
+                        if (c == '_') break;
+                    }
                 }
+
+                return any ? v : 0;
+            }
+
+            public override async UniTask LoadAssets(CancellationToken ct, params string[] assetKeys)
+            {
+                if (IsLoaded) return;
+                if (assetKeys == null || assetKeys.Length == 0)
+                    throw new ArgumentOutOfRangeException(nameof(assetKeys), "Collection name required");
+
+                var collection = assetKeys[0];
+                var keys = Enumerable.Range(1, LENGTH)
+                    .Select(i => string.Format(TEMPLATE, i, collection))
+                    .ToArray();
+
+                await base.LoadAssets(ct, keys);
             }
         }
     }

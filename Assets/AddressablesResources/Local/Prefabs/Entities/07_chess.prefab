@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <DebugView>k__BackingField: {fileID: 8480337512852551547}
+  renderer: {fileID: 8491776127731130781}
   collider: {fileID: 4384451807231497555}
 --- !u!114 &8480337512852551547
 MonoBehaviour:
@@ -150,5 +151,10 @@ BoxCollider:
 --- !u!4 &7231224275334745371 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5f97f2ac0afa644fdaadb00e369644e4, type: 3}
+  m_PrefabInstance: {fileID: 7192461184589572848}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8491776127731130781 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7635826562936255635, guid: 5f97f2ac0afa644fdaadb00e369644e4, type: 3}
   m_PrefabInstance: {fileID: 7192461184589572848}
   m_PrefabAsset: {fileID: 0}

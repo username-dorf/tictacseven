@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: eb0b710aaabe74b1e8f3538bf94b637b
   m_currentHash:
     serializedVersion: 2
-    Hash: f2ed9aec0de50528438d100fe08e35cd
+    Hash: 00000000000000000000000000000000
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -59,9 +59,13 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 0
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
+  - {fileID: 11400000, guid: 7d9698291f93941a0953968b7a8ad4a9, type: 2}
   - {fileID: 11400000, guid: 24b72a04d48b946f48d1d3184e8da270, type: 2}
   - {fileID: 11400000, guid: 3960a8435a92942a09fe7bda94deef28, type: 2}
+  - {fileID: 11400000, guid: e965b2a2edab84a93a8512c28ffd481b, type: 2}
+  - {fileID: 11400000, guid: e734b9a49ca57472aa905d36e8525fba, type: 2}
   - {fileID: 11400000, guid: 23acbde31f6c0463eb0815d55a9bdc77, type: 2}
+  - {fileID: 11400000, guid: 7f885f247d38b4f56a4a367ede027d34, type: 2}
   - {fileID: 11400000, guid: d4b01523f59b3434c84cf262d5ffe94d, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -102,6 +106,11 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - default
+    - sprite
+    - digit
+    - base
+    - digit
+    - material
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 017708a5b5c144b1987e2afc46b56888, type: 2}

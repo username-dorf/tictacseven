@@ -11,6 +11,7 @@ namespace Core.StateMachine
         {
             _stateMachine = stateMachine;
         }
+        
         public async UniTask EnterAsync(CancellationToken cancellationToken)
         {
             await _stateMachine.ChangeStateAsync<GameState>(false);
@@ -19,5 +20,6 @@ namespace Core.StateMachine
         public async UniTask ExitAsync(CancellationToken cancellationToken)
         {
         }
+
     }
 }

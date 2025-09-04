@@ -10,11 +10,15 @@ namespace Core.StateMachine
         }
         private void BindStates()
         {
-            InstallState<BootstrapState>(Container);
-            InstallState<MenuState>(Container);
-            InstallState<GameState>(Container);
+            Container.InstallState<BootstrapState>();
+            Container.InstallState<MenuState>();
+            Container.InstallState<GameState>();
         }
-        private void InstallState<TState>(DiContainer diContainer) where TState : IState
+    }
+
+    public static class StatesRegistrationExtensions
+    {
+        public static void InstallState<TState>(this DiContainer diContainer) where TState : IState
         {
             diContainer.Bind<IState>()
                 .WithId(typeof(TState).Name)

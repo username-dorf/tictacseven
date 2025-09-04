@@ -39,7 +39,7 @@ namespace Game.Field
         {
             private AsyncOperationHandle<GameObject> _handle;
             
-            private const string AssetPath = "FieldModel";
+            private const string AssetPath = "FieldModel_tiled";
             
             public async UniTask<FieldView> LoadAssetAsync(CancellationToken cancellationToken)
             {

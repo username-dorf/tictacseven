@@ -10,6 +10,10 @@ namespace Game.Entities
                 .AsSingle();
             Container.Bind<EntitiesBackgroundGridFactory>()
                 .AsSingle();
+            Container.Bind<EntitiesValueSpriteProvider>()
+                .AsSingle();
+            Container.Bind<EntitiesMaterialProvider>()
+                .AsSingle();
             Container.Bind<EntityFactory>()
                 .AsSingle();
         }

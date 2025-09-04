@@ -7,20 +7,32 @@ namespace Game.Entities
     public class EntityViewModel: IDisposable
     {
         public ReadOnlyReactiveProperty<int> Value { get; }
+        public ReactiveProperty<Material> Material { get; }
+        public ReactiveProperty<Sprite> ValueSprite { get; }
         public ReadOnlyReactiveProperty<bool> IsMoving => 
             _model.Transform.IsMoving;
         public ReadOnlyReactiveProperty<Vector3> Position => 
             _model.Transform.Position;
+        public ReadOnlyReactiveProperty<Vector3> Scale => 
+            _model.Transform.Scale;
+        public ReadOnlyReactiveProperty<bool> IsVisible =>
+            _model.Transform.Visible;
+
+        public ReadOnlyReactiveProperty<bool> IsInteractable =>
+            _model.Transform.Interactable;
         
         private CompositeDisposable _disposable;
         private EntityModel _model;
 
-        public EntityViewModel(EntityModel model)
+        public EntityViewModel(EntityModel model, Sprite valueSprite, Material material)
         {
             _model = model;
             _disposable = new CompositeDisposable();
             
             Value = new ReadOnlyReactiveProperty<int>(model.Data.Merit); //debug purpose
+            Material = new ReactiveProperty<Material>();
+            ValueSprite = new ReactiveProperty<Sprite>(valueSprite);
+            Material = new ReactiveProperty<Material>(material);
             
             _model.Transform.IsSelected
                 .Where(x => !x)
@@ -33,6 +45,10 @@ namespace Game.Entities
         {
             if(isSelected && !CanBeMoved())
                 return; 
+            
+            if(!isSelected && !_model.Transform.IsSelected.Value)
+                return;
+            
             _model.Transform.SetSelected(isSelected);
         }
         public void SetMoving(bool isDragging)
@@ -52,12 +68,11 @@ namespace Game.Entities
 
         private bool CanBeMoved()
         {
-            return !_model.Transform.Moveable.Value;
+            return _model.Transform.IsMoveable.Value;
         }
 
         private void OnRelease()
         {
-            Debug.Log($"EntityViewModel: OnRelease called {_model.Transform.Position.Value}");
             _model.Events.ReleaseCommand.Execute(_model);
         }
 

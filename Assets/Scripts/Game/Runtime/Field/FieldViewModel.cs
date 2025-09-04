@@ -43,7 +43,7 @@ namespace Game.Field
 
         private void CheckWinningCondition(FieldModel model)
         {
-            var winner = GetWinner(model);
+            var winner = model.GetWinner();
             if(winner != null)
                 Debug.Log($"Winner found {winner}");
         }
@@ -53,6 +53,7 @@ namespace Game.Field
             void ResetPlaceablePosition()
             {
                 placeableModel.Transform.SetPosition(placeableModel.Transform.InitialPosition.Value);
+                Debug.Log($"{placeableModel.Data.Merit.Value} by {placeableModel.Data.Owner.Value} Position {placeableModel.Transform.Position.Value} reset to initial {placeableModel.Transform.InitialPosition.Value}");
             }
             try
             {
@@ -66,9 +67,9 @@ namespace Game.Field
                 }
                 var placePosition = nearestPlace.Transform.Position.Value;
                 
-                _model.UpdateEntity(nearestCoors,new EntityModel(placeableModel.Data.Merit.Value,placeableModel.Data.Owner.Value, placePosition));
+                _model.UpdateEntity(nearestCoors,placePosition, placeableModel);
                 placeableModel.Transform.SetPosition(placePosition);
-                placeableModel.Transform.SetLocked(true);
+                placeableModel.Transform.SetMoveable(false);
                 placeableModel.Events.ReleaseApprovedCommand.Execute(placeableModel);
                 return true;
             }
@@ -85,11 +86,14 @@ namespace Game.Field
             var maxDistance = FieldConfig.PLACE_MAGNITUDE;
             var key = new Vector2Int(-1, -1);
             float minDist = float.MaxValue;
-            Vector3 origin = placeableModel.Transform.Position.Value;
+            var originPosition = placeableModel.Transform.Position.Value;
+            Vector3 origin = new Vector3(originPosition.x,0,originPosition.z);
 
             foreach (var (coors, model) in places)
             {
-                float dist = Vector3.Distance(model.Transform.Position.Value, origin);
+                var targetPosition = model.Transform.Position.Value;
+                var target = new Vector3(targetPosition.x, 0, targetPosition.z);
+                float dist = Vector3.Distance(target, origin);
                 if (dist < minDist)
                 {
                     minDist = dist;
@@ -117,8 +121,12 @@ namespace Game.Field
                 return false;
             return true;
         }
+        
+    }
 
-        public int? GetWinner(FieldModel model)
+    public static class FieldModelExtensions
+    {
+        public static int? GetWinner(this FieldModel model)
         {
             var dict = model.Entities;
             var coords = dict.Select(x=>x.Key).ToArray();
@@ -208,6 +216,5 @@ namespace Game.Field
             }
             return null;
         }
-        
     }
 }

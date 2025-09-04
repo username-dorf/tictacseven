@@ -17,7 +17,7 @@ namespace Game.Entities
 
         public EntityModel(int value,int owner, Vector3 position)
         {
-            Transform = new EntityTransformModel(position);
+            Transform = new EntityTransformModel(position, Vector3.one*0.8f);
             Data = new EntityDataModel(value, owner);
             Events = new EntityEventsModel();
         }
@@ -50,31 +50,51 @@ namespace Game.Entities
         }
         public class EntityTransformModel : IPlaceableModel.ITransform
         {
-            public ReadOnlyReactiveProperty<Vector3> Position { get; private set; }
-            public ReadOnlyReactiveProperty<Vector3> InitialPosition { get; private set; }
-            public ReadOnlyReactiveProperty<bool> Moveable { get; }
+            public ReadOnlyReactiveProperty<bool> Visible { get; }
+            public ReadOnlyReactiveProperty<Vector3> Position { get;}
+            public ReadOnlyReactiveProperty<Vector3> Scale { get; }
+            public ReadOnlyReactiveProperty<Vector3> InitialPosition { get; }
+            public ReadOnlyReactiveProperty<Vector3> InitialScale { get; }
+            public ReadOnlyReactiveProperty<bool> IsMoveable { get; }
             public ReadOnlyReactiveProperty<bool> IsSelected { get; }
             public ReadOnlyReactiveProperty<bool> IsMoving { get; }
+            public ReadOnlyReactiveProperty<bool> Interactable { get; }
+
 
             private ReactiveProperty<Vector3> _position;
-            private ReactiveProperty<bool> _isLocked;
+            private ReactiveProperty<Vector3> _scale;
+            private ReactiveProperty<bool> _isMoveable;
             private ReactiveProperty<bool> _isSelected;
+            private ReactiveProperty<bool> _interactable;
             private ReactiveProperty<bool> _isMoving;
+            private ReactiveProperty<bool> _isVisible;
 
             
-            public EntityTransformModel(Vector3 position)
+            public EntityTransformModel(Vector3 position, Vector3 scale)
             {
                 _position = new ReactiveProperty<Vector3>(position);
+                _scale = new ReactiveProperty<Vector3>(scale);
                 InitialPosition = new ReadOnlyReactiveProperty<Vector3>(new ReactiveProperty<Vector3>(position));
+                InitialScale = new ReadOnlyReactiveProperty<Vector3>(new ReactiveProperty<Vector3>(scale));
                 
-                _isLocked = new ReactiveProperty<bool>(false);
+                _isMoveable = new ReactiveProperty<bool>(true);
                 _isSelected = new ReactiveProperty<bool>(false);
+                _interactable = new ReactiveProperty<bool>(false);
                 _isMoving = new ReactiveProperty<bool>(false);
+                _isVisible = new ReactiveProperty<bool>(true);
                 
                 Position = new ReadOnlyReactiveProperty<Vector3>(_position);
-                Moveable = new ReadOnlyReactiveProperty<bool>(_isLocked);
+                Scale = new ReadOnlyReactiveProperty<Vector3>(_scale);
+                IsMoveable = new ReadOnlyReactiveProperty<bool>(_isMoveable);
                 IsSelected = new ReadOnlyReactiveProperty<bool>(_isSelected);
+                Interactable = new ReadOnlyReactiveProperty<bool>(_interactable);
                 IsMoving = new ReadOnlyReactiveProperty<bool>(_isMoving);
+                Visible = new ReadOnlyReactiveProperty<bool>(_isVisible);
+            }
+
+            public void SetVisible(bool visible)
+            {
+                _isVisible.Value = visible;
             }
 
             public void SetPosition(Vector3 position)
@@ -82,9 +102,9 @@ namespace Game.Entities
                 _position.Value = position;
             }
               
-            public void SetLocked(bool locked)
+            public void SetMoveable(bool isMoveable)
             {
-                _isLocked.Value = locked;
+                _isMoveable.Value = isMoveable;
             }
 
             public void SetSelected(bool selected)
@@ -96,15 +116,36 @@ namespace Game.Entities
             {
                 _isMoving.Value = isMoving;
             }
+            
+            public void SetInteractable(bool isSelectable)
+            {
+                _interactable.Value = isSelectable;
+            }
+
+            public void SetScale(Vector3 scale)
+            {
+                _scale.Value = scale;
+            }
+
+            public void Reset()
+            {
+                _position.Value = InitialPosition.Value;
+                _scale.Value = InitialScale.Value;
+                _isMoveable.Value = true;
+                _isSelected.Value = false;
+                _interactable.Value = false;
+                _isMoving.Value = false;
+                _isVisible.Value = true;
+            }
 
 
             public void Dispose()
             {
-                _isLocked?.Dispose();
+                _isMoveable?.Dispose();
                 _isSelected?.Dispose();
                 Position?.Dispose();
                 InitialPosition?.Dispose();
-                Moveable?.Dispose();
+                IsMoveable?.Dispose();
                 IsSelected?.Dispose();
             }
         }

@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Zenject;
 
 namespace Core.StateMachine
 {

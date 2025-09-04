@@ -5,18 +5,16 @@ namespace Game.Field
 {
     public class FieldGridFactory
     {
-        private const float BORDER_SPACING = 1f;
-
-        public Vector3[,] Create(BoxCollider collider, int row, int column)
+        public Vector3[,] Create(BoxCollider collider, int row, int column, float spacing = 0.25f)
         {
             var bounds = collider.bounds;
 
             var y = bounds.max.y;
 
-            var startX = bounds.min.x + BORDER_SPACING;
-            var endX = bounds.max.x - BORDER_SPACING;
-            var startZ = bounds.min.z + BORDER_SPACING;
-            var endZ = bounds.max.z - BORDER_SPACING;
+            var startX = bounds.min.x + spacing;
+            var endX = bounds.max.x - spacing;
+            var startZ = bounds.min.z + spacing;
+            var endZ = bounds.max.z - spacing;
 
             var totalWidth = endX - startX;
             var totalDepth = endZ - startZ;
@@ -39,15 +37,15 @@ namespace Game.Field
             return matrix;
         }
         
-        public List<(Vector3 start, Vector3 end)> CreateLines(BoxCollider collider, int rows, int columns)
+        public List<(Vector3 start, Vector3 end)> CreateLines(BoxCollider collider, int rows, int columns, float spacing = 0.25f)
         {
             var bounds = collider.bounds;
             var y = bounds.max.y;
 
-            var startX = bounds.min.x + BORDER_SPACING;
-            var endX = bounds.max.x - BORDER_SPACING;
-            var startZ = bounds.min.z + BORDER_SPACING;
-            var endZ = bounds.max.z - BORDER_SPACING;
+            var startX = bounds.min.x + spacing;
+            var endX = bounds.max.x - spacing;
+            var startZ = bounds.min.z + spacing;
+            var endZ = bounds.max.z - spacing;
 
             var cellWidth = (endX - startX) / columns;
             var cellDepth = (endZ - startZ) / rows;

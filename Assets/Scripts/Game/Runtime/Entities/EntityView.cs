@@ -9,8 +9,12 @@ namespace Game.Entities
     public class EntityView : MonoBehaviour
     {
         [field: SerializeField] public EntityDebugView DebugView { get; private set; }
+        [SerializeField] private Renderer renderer;
         [SerializeField] private BoxCollider collider;
         private float _maxRayDistance = 100f;
+        private bool _enableScaleAnimation = true;
+        private Vector3 _animationInitialScale;
+        private Vector3 _animationInitialPosition;
         
         private EntityViewModel _viewModel;
         private FieldViewProvider _fieldViewProvider;
@@ -28,11 +32,31 @@ namespace Game.Entities
             viewModel.Position
                 .Subscribe(OnPositionChanged)
                 .AddTo(this);
+            
+            viewModel.Scale
+                .Subscribe(OnScaleChanged)
+                .AddTo(this);
+            
+            viewModel.Material
+                .Subscribe(OnMaterialChanged)
+                .AddTo(this);
+
+            viewModel.ValueSprite
+                .Subscribe(ChangeValueOnMaterial)
+                .AddTo(this);
+
+            viewModel.IsVisible
+                .Subscribe(OnVisibleChanged)
+                .AddTo(this);
+            
+            _animationInitialScale = transform.localScale;
+            _animationInitialPosition = transform.position;
         }
 
         private void Update()
         {
-            HandlePointerInput();
+            if(_viewModel is not null && _viewModel.IsInteractable.Value)
+                HandlePointerInput();
         }
 
         private void HandlePointerInput()
@@ -94,9 +118,9 @@ namespace Game.Entities
             }
         }
 
-        public void SetScale(float scale)
+        private void OnScaleChanged(Vector3 scale)
         {
-            transform.localScale = Vector3.one * scale;
+            transform.localScale = scale;
         }
 
         private void OnValueChanged(int value)
@@ -107,6 +131,32 @@ namespace Game.Entities
         private void OnPositionChanged(Vector3 position)
         {
             transform.position = position;
+            if(_enableScaleAnimation)
+                DoScaleRelativeToPosition(position,_animationInitialPosition, _animationInitialScale);
+        }
+        private void OnMaterialChanged(Material material)
+        {
+            renderer.material = material;
+        }
+        public void ChangeValueOnMaterial(Sprite sprite)
+        {
+            var mpb = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(mpb);
+            mpb.SetTexture("_DigitTex", sprite.texture);
+            renderer.SetPropertyBlock(mpb);
+        }
+        private void OnVisibleChanged(bool isVisible)
+        {
+            gameObject.SetActive(isVisible);
+        }
+
+        private void DoScaleRelativeToPosition(Vector3 position, Vector3 initPosition, Vector3 initScale,
+            float maxDistance = 3, float maxScale = 1.0f)
+        {
+            position = new Vector3(position.x, 0, position.z);
+            float d = Vector3.Distance(position,new Vector3(initPosition.x,0,initPosition.z));
+            float t = (maxDistance > 0f) ? Mathf.Clamp01(d / maxDistance) : 1f;
+            transform.localScale=Vector3.Lerp(initScale, Vector3.one * maxScale, t);
         }
     }
 }
