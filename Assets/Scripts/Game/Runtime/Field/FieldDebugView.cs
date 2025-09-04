@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using UnityEditor;
+
 using UnityEngine;
 
 namespace Game.Field
@@ -23,6 +23,8 @@ namespace Game.Field
             _debugLines = newLines;
         }
 
+#if UNITY_EDITOR
+        
         private void OnDrawGizmos()
         {
             if (_debugPoints != null && drawPoints)
@@ -39,7 +41,7 @@ namespace Game.Field
                         var point = _debugPoints[x, y];
                         Gizmos.DrawSphere(point, 0.1f);
 #if UNITY_EDITOR
-                        Handles.Label(point + Vector3.up * 0.1f, $"[{x},{y}]");
+                        UnityEditor.Handles.Label(point + Vector3.up * 0.1f, $"[{x},{y}]");
 #endif
                     }
                 }
@@ -55,5 +57,6 @@ namespace Game.Field
                 }
             }
         }
+#endif
     }
 }

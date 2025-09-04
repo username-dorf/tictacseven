@@ -37,7 +37,7 @@ namespace Core.StateMachine
             await _stateMachine.ChangeStateAsync<MenuState>(ct);
         }
 
-        public UniTask ExitAsync(CancellationToken cancellationToken)
+        public UniTask ExitAsync(CancellationToken ct)
         {
             return UniTask.CompletedTask;
         }

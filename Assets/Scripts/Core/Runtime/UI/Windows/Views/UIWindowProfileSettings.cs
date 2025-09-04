@@ -9,7 +9,8 @@ namespace Core.UI.Windows.Views
 {
     public class UIWindowProfileSettings : WindowView<UIWindowProfileSettings.ViewModel>
     {
-        [SerializeField] private UINicknameEditView nicknameEditView;
+        [SerializeField] private UIStringEditView idEditView;
+        [SerializeField] private UIStringEditView stringEditView;
         [SerializeField] private UIProfileSelectorView profileSelectorView;
         [SerializeField] private UIEntitySkinSelectorView entitySkinSelectorView;
         [SerializeField] private UIButtonView closeButton;
@@ -17,7 +18,8 @@ namespace Core.UI.Windows.Views
         protected override async UniTask BindViewAsync(ViewModel viewModel, CancellationToken ct)
         {
             closeButton.Initialize(viewModel.CloseWindow);
-            viewModel.InitializeNicknameEditView(nicknameEditView);
+            viewModel.InitializeIdEditView(idEditView);
+            viewModel.InitializeNicknameEditView(stringEditView);
             viewModel.InitializeProfileSelectorView(profileSelectorView);
             await viewModel.InitializeSkinViewAsync(entitySkinSelectorView, ct);
         }
@@ -60,10 +62,18 @@ namespace Core.UI.Windows.Views
                 _profileSelectorPresenter.Initialize();
             }
 
-            public void InitializeNicknameEditView(UINicknameEditView view)
+            public void InitializeNicknameEditView(UIStringEditView view)
             {
                 var presenter = new UINicknameEditPresenter(view, _userPreferencesProvider);
                 presenter.Initialize();
+            }
+            public void InitializeIdEditView(UIStringEditView view)
+            {
+                var presenter = new UIIdEditPresenter(view, _userPreferencesProvider);
+                presenter.Initialize();
+#if !UNITY_EDITOR
+                presenter.SetVisible(false);
+#endif
             }
 
             public void CloseWindow()

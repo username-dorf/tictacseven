@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Core.UI.Windows;
 using Core.UI.Windows.Views;
+using Core.User;
 using Cysharp.Threading.Tasks;
 using Game.User;
 using UnityEngine;
@@ -14,42 +15,42 @@ namespace Game.States
     {
         private List<UserRoundModel> _roundModels;
         private IWindowsController _windowsController;
-        private UserRoundModel.Provider _userRoundModelProvider;
-        private AIUserRoundModel.Provider _opponentRoundModelProvider;
+        private UserRoundModel _userRoundModel;
+        private UserRoundModel _opponentRoundModel;
 
         public class Payload
         {
-            public int WinnerOwner { get; }
+            public List<int> WinnerOwners { get; }
 
-            public Payload(int winnerOwner)
+            public Payload(params int[] winnerOwners)
             {
-                WinnerOwner = winnerOwner;
+                WinnerOwners = new List<int>(winnerOwners);
             }
         }
 
         public RoundResultSubstate(
             IGameSubstateResolver substateResolverFactory,
-            [Inject(Id = GameSubstateSettings.ROUND_MODELS_ALIAS)] List<UserRoundModel> roundModels,
-            UserRoundModel.Provider userRoundModelProvider,
-            AIUserRoundModel.Provider opponentRoundModelProvider,
+            [Inject(Id = GameSubstatesFacade.ROUND_MODELS_ALIAS)] List<UserRoundModel> roundModels,
+            [Inject(Id = UserModelConfig.ID)] UserRoundModel userRoundModel,
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserRoundModel opponentRoundModel,
             IWindowsController windowsController) : base(substateResolverFactory)
         {
-            _opponentRoundModelProvider = opponentRoundModelProvider;
-            _userRoundModelProvider = userRoundModelProvider;
+            _opponentRoundModel = opponentRoundModel;
+            _userRoundModel = userRoundModel;
             _windowsController = windowsController;
             _roundModels = roundModels;
         }
         
         protected override async UniTask EnterAsync(Payload payload, CancellationToken ct)
         {
-            UpdateRoundModels(payload.WinnerOwner);
-            var windowPayload = new UIWindowRoundResult.Payload(payload.WinnerOwner,_userRoundModelProvider.Model,_opponentRoundModelProvider.Model);
+            _roundModels.UpdateAllModels(payload.WinnerOwners);
+            var windowPayload = new UIWindowRoundResult.Payload(_userRoundModel,_opponentRoundModel);
             await _windowsController.OpenAsync<UIWindowRoundResult,UIWindowRoundResult.Payload>(windowPayload,ct);
             await UniTask.Delay(TimeSpan.FromSeconds(2f), cancellationToken: ct);
             await SubstateMachine.ChangeStateAsync<RoundClearSubstate>(ct);
 
         }
-        public override UniTask ExitAsync(CancellationToken cancellationToken)
+        public override UniTask ExitAsync(CancellationToken ct)
         {
             return UniTask.CompletedTask;
         }
@@ -57,15 +58,6 @@ namespace Game.States
         public override void Dispose()
         {
             
-        }
-
-        private void UpdateRoundModels(int winnerOwner)
-        {
-            foreach (var model in _roundModels)
-            {
-                var isWinnerModel = model.Owner == winnerOwner;
-                model.SetRoundResult(isWinnerModel);
-            }
         }
     }
 }

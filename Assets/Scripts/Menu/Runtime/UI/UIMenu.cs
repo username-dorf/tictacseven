@@ -9,7 +9,9 @@ namespace Menu.Runtime.UI
     public class UIMenu : IUIView
     {
         public UIWorldButtonView ClassicButtonView { get; private set; }
+        public UIWorldButtonView ArcadeButtonView { get; private set; }
         public UIWorldButtonView SettingsButtonView { get; private set; }
+        public UIWorldButtonView SocialButtonView { get; private set; }
         public UIWorldButtonView ProfileSettingsButtonView { get; private set; }
         
         public MultiplayerButtonsGroup MultiplayerGroup { get; private set; }
@@ -27,6 +29,14 @@ namespace Menu.Runtime.UI
         public void BindProfileSettingsButton(UIWorldButtonView view)
         {
             ProfileSettingsButtonView = view;
+        }
+        public void BindSocialButton(UIWorldButtonView view)
+        {
+            SocialButtonView = view;
+        }
+        public void BindArcadeButton(UIWorldButtonView view)
+        {
+            ArcadeButtonView = view;
         }
 
         public void BindMultiplayerButtons(UIWorldButtonView createHost, UIWorldButtonView connectClient)

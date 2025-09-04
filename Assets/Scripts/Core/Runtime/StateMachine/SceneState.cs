@@ -9,7 +9,7 @@ namespace Core.StateMachine
     {
         
         public abstract UniTask EnterAsync(CancellationToken ct);
-        public abstract UniTask ExitAsync(CancellationToken cancellationToken);
+        public abstract UniTask ExitAsync(CancellationToken ct);
         
         protected async UniTask LoadSceneAsync(string sceneName, CancellationToken cancellationToken)
         {

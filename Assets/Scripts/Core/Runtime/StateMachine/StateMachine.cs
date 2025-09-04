@@ -69,7 +69,7 @@ namespace Core.StateMachine
 
         public UniTask ChangeStateAsync<T>(bool awaitExiting, CancellationToken ct) where T : IState
         {
-            var state = _stateFactory.Create(typeof(T).Name);
+            var state = _stateFactory.Get<T>();
             return ChangeStateAsync((T) state, awaitExiting, ct);
         }
 
@@ -95,7 +95,7 @@ namespace Core.StateMachine
         public UniTask ChangeStateAsync<TState, TPayload>(TPayload payload, bool awaitExiting, CancellationToken ct)
             where TState : IState, IPayloadedState<TPayload>
         {
-            var state = (IPayloadedState<TPayload>) _stateFactory.Create(typeof(TState).Name);
+            var state = (IPayloadedState<TPayload>) _stateFactory.Get<TState>();
             state.SetPayload(payload);
             return ChangeStateAsync((TState) state, payload, awaitExiting, ct);
         }

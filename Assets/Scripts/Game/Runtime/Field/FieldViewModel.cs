@@ -37,15 +37,6 @@ namespace Game.Field
         private void OnPlaceAttempt(IPlaceableModel placeableModel)
         {
             var placed = TryPlaceEntity(placeableModel);
-            if(placed)
-                CheckWinningCondition(_model);
-        }
-
-        private void CheckWinningCondition(FieldModel model)
-        {
-            var winner = model.GetWinner();
-            if(winner != null)
-                Debug.Log($"Winner found {winner}");
         }
 
         private bool TryPlaceEntity(IPlaceableModel placeableModel)
@@ -125,6 +116,43 @@ namespace Game.Field
 
     public static class FieldModelExtensions
     {
+        public static bool IsDraw(this FieldModel model, UserEntitiesModel hand)
+        {
+            var dict = model.Entities;
+
+            if (hand?.Entities == null || hand.Entities.Count == 0)
+                return true;
+
+            foreach (var cell in dict)
+            {
+                if (cell.Value.Data.Owner.Value <= 0)
+                    return false;
+            }
+
+            int maxMyMerit = int.MinValue;
+            foreach (var piece in hand.Entities)
+            {
+                int m = piece.Data.Merit.Value;
+                if (m > maxMyMerit) maxMyMerit = m;
+            }
+
+            int minEnemyTopMerit = int.MaxValue;
+            foreach (var cell in dict)
+            {
+                int owner = cell.Value.Data.Owner.Value;
+                if (owner > 0 && owner != hand.Owner)
+                {
+                    int enemyMerit = cell.Value.Data.Merit.Value;
+                    if (enemyMerit < minEnemyTopMerit) minEnemyTopMerit = enemyMerit;
+                }
+            }
+
+            if (minEnemyTopMerit == int.MaxValue)
+                return true;
+
+            return !(maxMyMerit > minEnemyTopMerit);
+        }
+    
         public static int? GetWinner(this FieldModel model)
         {
             var dict = model.Entities;

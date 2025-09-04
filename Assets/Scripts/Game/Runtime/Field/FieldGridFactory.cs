@@ -36,6 +36,20 @@ namespace Game.Field
 
             return matrix;
         }
+        public Vector3[,] CreateEmpty(int row, int column)
+        {
+            var matrix = new Vector3[row, column];
+
+            for (int z = 0; z < row; z++)
+            {
+                for (int x = 0; x < column; x++)
+                {
+                    matrix[z, x] = Vector3.zero;
+                }
+            }
+
+            return matrix;
+        }
         
         public List<(Vector3 start, Vector3 end)> CreateLines(BoxCollider collider, int rows, int columns, float spacing = 0.25f)
         {

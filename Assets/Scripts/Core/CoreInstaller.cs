@@ -2,10 +2,12 @@ using Core.Common;
 using Core.StateMachine;
 using Core.UI;
 using Core.User;
+using UnityEngine.Scripting;
 using Zenject;
 
 namespace Core
 {
+    [Preserve] 
     public class CoreInstaller : MonoInstaller
     {
         public override void InstallBindings()

@@ -11,7 +11,6 @@ namespace Game.States
 {
     public class UserMoveSubstate : GameSubstate
     {
-        public const string AGENT_MODEL_ID = "UserModel";
         
         private readonly FieldModel _field;
         private readonly UserEntitiesModel _userEntitiesModel;
@@ -21,7 +20,7 @@ namespace Game.States
         public UserMoveSubstate(
             IGameSubstateResolver gameSubstateResolver,
             FieldModel field,
-            [Inject(Id = UserMoveSubstate.AGENT_MODEL_ID)] UserEntitiesModel userEntitiesModel,
+            [Inject(Id = UserModelConfig.ID)] UserEntitiesModel userEntitiesModel,
             UserRoundModel.Provider userRoundModelProvider) : base(gameSubstateResolver)
         {
             _userRoundModelProvider = userRoundModelProvider;
@@ -39,7 +38,7 @@ namespace Game.States
             
         }
 
-        public override async UniTask ExitAsync(CancellationToken _)
+        public override async UniTask ExitAsync(CancellationToken ct)
         {
             _disposable?.Clear();
             _userEntitiesModel.SetInteractionAll(false);

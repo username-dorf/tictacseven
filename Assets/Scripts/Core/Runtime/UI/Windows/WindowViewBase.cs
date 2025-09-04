@@ -13,6 +13,8 @@ namespace Core.UI.Windows
         [SerializeField, Foldout("Base Window")] private bool _useBaseFade = true;
         [SerializeField, Foldout("Base Window")] private float _fadeDuration = 0.12f;
 
+        private bool _isClosing;
+        public  bool IsClosing => _isClosing;
         protected readonly CompositeDisposable Disposables = new();
 
         protected virtual void Awake()
@@ -57,6 +59,9 @@ namespace Core.UI.Windows
 
         public async UniTask CloseAsync(CancellationToken ct)
         {
+            if (this == null || _isClosing) return;
+            _isClosing = true;
+
             await OnBeforeCloseAsync(ct);
 
             if (_canvasGroup)
@@ -73,11 +78,13 @@ namespace Core.UI.Windows
             await UnbindAsync(ct);
             await OnAfterCloseAsync(ct);
 
-            Destroy(gameObject);
+            if (this) Destroy(gameObject);
         }
 
         public async UniTask HideAsync(CancellationToken ct)
         {
+            if (this == null || _isClosing) return;
+
             await OnBeforeHideAsync(ct);
 
             if (_canvasGroup)
@@ -91,7 +98,7 @@ namespace Core.UI.Windows
             else
                 await PlayHideAnimationAsync(ct);
 
-            gameObject.SetActive(false);
+            if (this) gameObject.SetActive(false);
             await OnAfterHideAsync(ct);
         }
 
@@ -159,6 +166,10 @@ namespace Core.UI.Windows
             _canvasGroup.alpha = to;
         }
 
-        protected virtual void OnDestroy() => Disposables.Dispose();
+        protected virtual void OnDestroy()
+        {
+            _isClosing = true;
+            Disposables.Dispose();
+        }
     }
 }

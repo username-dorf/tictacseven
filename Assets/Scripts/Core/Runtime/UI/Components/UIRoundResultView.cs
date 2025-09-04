@@ -19,7 +19,6 @@ namespace Core.UI.Components
                 .FromMethod((ctx, model) =>
                     new UIRoundResultView.ViewModel(
                         model,
-                        ctx.Resolve<IUserPreferencesProvider>(),
                         ctx.Resolve<ProfileSpriteSetsProvider>()));
 
             Container
@@ -38,6 +37,7 @@ namespace Core.UI.Components
     {
         [field: SerializeField] public UIUserProfileView userProfileView { get; private set; }
         [field: SerializeField] public UIVariableDotViewGroup DotViewsGroup { get; private set; }
+        [SerializeField] private bool inverted;
         private Vector3 _originScale;
 
         public void Initialize(ViewModel viewModel)
@@ -53,7 +53,7 @@ namespace Core.UI.Components
 
             viewModel.AwaitingTurn
                 .DistinctUntilChanged()
-                .Subscribe(value => SetAwaitingTurn(value,viewModel.Invert))
+                .Subscribe(value => SetAwaitingTurn(value,inverted))
                 .AddTo(this);
         }
 
@@ -117,33 +117,28 @@ namespace Core.UI.Components
             public IReadOnlyReactiveCollection<bool> RoundResults { get; private set; }
             
             public ReadOnlyReactiveProperty<bool> AwaitingTurn { get; private set; }
-            public bool Invert { get; }
             
             public ViewModel(IUserRoundModel model, 
-                [Inject] IUserPreferencesProvider userPreferencesProvider,
                 [Inject] ProfileSpriteSetsProvider profileSpritesProvider)
             {
-                var userPreferences = userPreferencesProvider.Current;
-                var userProfileAssetId = userPreferences.ProfileAssetId.Value;
+                var userProfileAssetId = model.ProfileAssetId.Value;
                 var userProfileSprites = profileSpritesProvider.GetAsset(userProfileAssetId);
                 var userAvatarEmotion = ProfileEmotion.Default;
                 ProfileSprite = new ReactiveProperty<Sprite>(userProfileSprites.GetEmotionSprite(userAvatarEmotion));
-                Username = new ReadOnlyReactiveProperty<string>(userPreferences.User.Nickname);
+                Username = new ReadOnlyReactiveProperty<string>(model.UserModel.Nickname);
                 RoundResults = model.RoundResults;
                 AwaitingTurn = model.AwaitingTurn.ToReadOnlyReactiveProperty();
-                Invert = false;
             }
 
             public ViewModel(IAIUserRoundModel model,
                 [Inject] ProfileSpriteSetsProvider profileSpritesProvider)
             {
                 var opponentAvatarEmotion = ProfileEmotion.Default;
-                var opponentProfileSprites = profileSpritesProvider.GetAsset(model.ProfileAssetId);
+                var opponentProfileSprites = profileSpritesProvider.GetAsset(model.ProfileAssetId.Value);
                 ProfileSprite = new ReactiveProperty<Sprite>(opponentProfileSprites.GetEmotionSprite(opponentAvatarEmotion));
                 Username = new ReadOnlyReactiveProperty<string>(model.UserModel.Nickname);
                 RoundResults = model.RoundResults;
                 AwaitingTurn = model.AwaitingTurn.ToReadOnlyReactiveProperty();
-                Invert = true;
             }
 
             public void Dispose()

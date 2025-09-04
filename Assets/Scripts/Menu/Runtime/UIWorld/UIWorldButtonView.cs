@@ -102,7 +102,8 @@ namespace Menu.UIWorld
         {
             try
             {
-                await _viewModel.ExecuteAsync(_onDestroyToken);
+                if(_viewModel is not null)
+                    await _viewModel.ExecuteAsync(_onDestroyToken);
                 if (afterExecuteCooldown > 0f)
                     await UniTask.Delay(TimeSpan.FromSeconds(afterExecuteCooldown), cancellationToken: _onDestroyToken);
             }

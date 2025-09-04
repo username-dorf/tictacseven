@@ -17,13 +17,9 @@ namespace Core.StateMachine
         public override async UniTask EnterAsync(CancellationToken ct)
         {
             await LoadSceneAsync("Game", ct);
-            
-            var sceneContext = GameObject.FindFirstObjectByType<SceneContext>();
-            _gameBootstrap = sceneContext.Container.Resolve<IGameBootstrapAsync>();
-            await _gameBootstrap.InitializeAsync(ct);
         }
 
-        public override async UniTask ExitAsync(CancellationToken cancellationToken)
+        public override async UniTask ExitAsync(CancellationToken ct)
         {
             _gameBootstrap?.Dispose();
         }

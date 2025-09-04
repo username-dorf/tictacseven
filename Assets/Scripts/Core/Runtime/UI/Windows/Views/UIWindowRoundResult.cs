@@ -113,7 +113,7 @@ namespace Core.UI.Windows.Views
                 var opponentAvatarEmotion = OpponentRoundResults[^1]
                     ? ProfileEmotion.Happy
                     : ProfileEmotion.Sad;
-                var opponentProfileSprites = _profileSpritesProvider.GetAsset(payload.OpponentRoundModel.ProfileAssetId);
+                var opponentProfileSprites = _profileSpritesProvider.GetAsset(payload.OpponentRoundModel.ProfileAssetId.Value);
                 OpponentAvatar = new ReactiveProperty<Sprite>(opponentProfileSprites.GetEmotionSprite(opponentAvatarEmotion));
                 OpponentNickname = new ReactiveProperty<string>(payload.OpponentRoundModel.UserModel.Nickname.Value);
                 
@@ -141,12 +141,10 @@ namespace Core.UI.Windows.Views
         
         public class Payload
         {
-            public int WinnerOwner { get; }
             public IUserRoundModel UserRoundModel { get; }
-            public IAIUserRoundModel OpponentRoundModel { get; }
-            public Payload(int winnerOwner, IUserRoundModel userRoundModel, IAIUserRoundModel opponentRoundModel)
+            public IUserRoundModel OpponentRoundModel { get; }
+            public Payload(IUserRoundModel userRoundModel, IUserRoundModel opponentRoundModel)
             {
-                WinnerOwner = winnerOwner;
                 UserRoundModel = userRoundModel;
                 OpponentRoundModel = opponentRoundModel;
             }

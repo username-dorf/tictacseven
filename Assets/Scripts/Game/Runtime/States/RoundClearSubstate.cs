@@ -20,11 +20,11 @@ namespace Game.States
         public RoundClearSubstate(
             IGameSubstateResolver gameSubstateResolver,
             FieldModel fieldModel,
-            [Inject(Id = AgentAIMoveSubstate.AGENT_MODEL_ID)] UserEntitiesModel opponentEntitiesModel,
-            [Inject(Id = UserMoveSubstate.AGENT_MODEL_ID)] UserEntitiesModel userEntitiesModel,
-            [Inject(Id = AgentAIMoveSubstate.AGENT_MODEL_ID)] EntitiesBackgroundView.EntitiesPlaceholderPresenter opponentEntitiesPlaceholder,
-            [Inject(Id = UserMoveSubstate.AGENT_MODEL_ID)] EntitiesBackgroundView.EntitiesPlaceholderPresenter userEntitiesPlaceholder) :
-            base(gameSubstateResolver)
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserEntitiesModel opponentEntitiesModel,
+            [Inject(Id = UserModelConfig.ID)] UserEntitiesModel userEntitiesModel,
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] EntitiesBackgroundView.EntitiesPlaceholderPresenter opponentEntitiesPlaceholder,
+            [Inject(Id = UserModelConfig.ID)] EntitiesBackgroundView.EntitiesPlaceholderPresenter userEntitiesPlaceholder) 
+            : base(gameSubstateResolver)
         {
             _userEntitiesPlaceholder = userEntitiesPlaceholder;
             _opponentEntitiesPlaceholder = opponentEntitiesPlaceholder;
@@ -43,7 +43,7 @@ namespace Game.States
             await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
         }
 
-        public override async UniTask ExitAsync(CancellationToken cancellationToken)
+        public override async UniTask ExitAsync(CancellationToken ct)
         {
         }
 

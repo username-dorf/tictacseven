@@ -4,8 +4,8 @@ using System.Threading;
 using Core.UI.Windows;
 using Cysharp.Threading.Tasks;
 using FishNet.Connection;
-using Multiplayer.Lan;
-using Multiplayer.Lan.Contracts;
+using Multiplayer.Connection;
+using Multiplayer.Contracts;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -112,35 +112,37 @@ namespace Multiplayer.UI.Windows.Views
 
         public class ViewModel : IViewModel
         {
+            private const int JOIN_TIMEOUT_SEC = 45;
             public ReactiveProperty<SubviewType> CurrentSubview { get; }
             public ReactiveProperty<string> JoinUsername { get; }
             public ReactiveCommand<(NetworkConnection connection, JoinRequest request)> OnJoinRequestReceived { get; }
             
-            private LanController _lanController;
+            private SessionController _sessionController;
             private IWindowsController _windowsController;
             private JoinApprovalService _joinApprovalService;
             private (NetworkConnection connection, JoinRequest request) _lastJoinRequest;
+            private CompositeDisposable _joinRequestTimeout;
 
-            public ViewModel(LanController lanController, IWindowsController windowsController, JoinApprovalService joinApprovalService)
+            public ViewModel(SessionController sessionController, IWindowsController windowsController, JoinApprovalService joinApprovalService)
             {
                 _joinApprovalService = joinApprovalService;
                 JoinUsername = new ReactiveProperty<string>();
                 CurrentSubview = new ReactiveProperty<SubviewType>(SubviewType.Waiting);
                 OnJoinRequestReceived = new ReactiveCommand<(NetworkConnection, JoinRequest)>();
                 _windowsController = windowsController;
-                _lanController = lanController;
+                _sessionController = sessionController;
             }
 
             public void CreateSession()
             {
                 CurrentSubview.Value = SubviewType.Waiting;
-                _lanController.CreateSession();
+                _sessionController.CreateSession();
                 _joinApprovalService.OnJoinRequested += OnJoinRequested;
             }
 
             public void CancelWaiting()
             {
-                _lanController.CancelHosting();
+                _sessionController.CancelHosting();
                 _ = _windowsController.CloseTopAsync();
                 _joinApprovalService.OnJoinRequested -= OnJoinRequested;
             }
@@ -154,25 +156,36 @@ namespace Multiplayer.UI.Windows.Views
 
             public void ApproveJoin()
             {
-                _joinApprovalService.Approve(_lastJoinRequest.connection);
+                _joinApprovalService.Approve(_lastJoinRequest.connection, _lastJoinRequest.request);
+                _joinRequestTimeout?.Dispose();
+                //game can be started; opponent connection received
             }
 
             public void CancelJoin()
             {
+                CurrentSubview.Value = SubviewType.Waiting;
                 _joinApprovalService.Reject(_lastJoinRequest.connection);
+                _joinRequestTimeout?.Dispose();
             }
 
             private void OnJoinRequested(NetworkConnection connection, JoinRequest request)
             {
                 CurrentSubview.Value = SubviewType.ApproveConnection;
-                JoinUsername.Value = request.PlayerName;
+                JoinUsername.Value = request.PreferencesModel.nickname;
                 _lastJoinRequest = (connection, request);
                 OnJoinRequestReceived?.Execute(_lastJoinRequest);
+
+                _joinRequestTimeout = new CompositeDisposable();
+                Observable.Timer(TimeSpan.FromSeconds(JOIN_TIMEOUT_SEC))
+                    .Subscribe(_=>CancelJoin())
+                    .AddTo(_joinRequestTimeout);
+
             }
             
             public void Dispose()
             {
                 _joinApprovalService.OnJoinRequested -= OnJoinRequested;
+                _joinRequestTimeout?.Dispose();
             }
         }
     }

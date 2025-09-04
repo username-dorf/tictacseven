@@ -8,6 +8,6 @@ namespace Core.StateMachine
     public interface IState: IDisposable
     {
         UniTask EnterAsync(CancellationToken ct);
-        UniTask ExitAsync(CancellationToken cancellationToken);
+        UniTask ExitAsync(CancellationToken ct);
     }
 }

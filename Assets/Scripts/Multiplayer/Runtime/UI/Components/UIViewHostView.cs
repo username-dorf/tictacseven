@@ -1,4 +1,6 @@
+using System;
 using Core.UI.Components;
+using Core.User;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -11,33 +13,46 @@ namespace Multiplayer.UI.Components
     {
         [SerializeField] private TMP_Text nickname;
         [SerializeField] private LayoutElement layoutElement;
+        [SerializeField] private UIButtonView connectButton;
 
-        protected override void OnBind(ViewModel vm, CompositeDisposable cd)
+        protected override void OnBind(ViewModel viewModel, CompositeDisposable disposable)
         {
-            vm.Nickname.Subscribe(t =>
-            {
-                if (nickname !=null)
-                {
-                    nickname.text = t;
-                }
-            }).AddTo(cd);
+            viewModel.Nickname
+                .Subscribe(OnChangeNickname)
+                .AddTo(disposable);
+            
+            connectButton.Initialize(viewModel.Connect);
         }
 
         protected override void OnUnbind()
         {
-            if (nickname)
-            {
-                nickname.text = string.Empty;
-            }
+            OnChangeNickname(string.Empty);
+        }
+
+        protected void OnChangeNickname(string nickname)
+        {
+            if(this.nickname != null)
+                this.nickname.text = nickname;
         }
 
         public class ViewModel : IListItemViewModel
         {
             public ReactiveProperty<string> Nickname { get; }
+            public ReactiveProperty<string> Ip { get; }
+            public IObservable<(string nickname, string ip)> OnConnectRequested => _onConnectRequested;
 
-            public ViewModel(string nickname)
+            private Subject<(string nickname, string ip)> _onConnectRequested;
+
+            public ViewModel(UserPreferencesDto preferencesModel, string ip)
             {
-                Nickname = new ReactiveProperty<string>(nickname);
+                _onConnectRequested = new Subject<(string nickname, string ip)>();
+                Nickname = new ReactiveProperty<string>(preferencesModel.nickname);
+                Ip = new ReactiveProperty<string>(ip);
+            }
+
+            public void Connect()
+            {
+                _onConnectRequested?.OnNext((Nickname.Value, Ip.Value));
             }
         }
     }

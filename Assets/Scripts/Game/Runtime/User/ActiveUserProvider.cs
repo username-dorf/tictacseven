@@ -17,7 +17,7 @@ namespace Game.User
         private int[] _ownerValues;
 
         public ActiveUserProvider(
-            [Inject(Id = GameSubstateSettings.ROUND_MODELS_ALIAS)] List<UserRoundModel> users,
+            [Inject(Id = GameSubstatesFacade.ROUND_MODELS_ALIAS)] List<UserRoundModel> users,
             DiContainer diContainer)
         {
             _ownerValues = new int[users.Count];

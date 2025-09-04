@@ -1,18 +1,17 @@
-using Core.UI.Components;
+using Core.StateMachine;
 using Game.Entities;
 using Game.Field;
 using Game.States;
 using Game.UI;
 using Game.User;
-using UnityEngine;
+using UnityEngine.Scripting;
 using Zenject;
 
 namespace Game
 {
+    [Preserve] 
     public class GameMonoInstaller : MonoInstaller
     {
-        [SerializeField] private UIProvider<UIGame> uiGame; 
-
         public override void InstallBindings()
         {
             FieldInstaller.Install(Container);
@@ -21,7 +20,11 @@ namespace Game
             
             Container.BindInterfacesTo<GameBootstrap>()
                 .AsSingle();
-            Container.BindInterfacesAndSelfTo<GameSubstateInstaller>()
+            Container.BindExecutionOrder<GameBootstrap>(100);
+
+            Container.Bind(typeof(IGameSubstatesInstaller), typeof(IGameSubstateResolver))
+                .FromSubContainerResolve()
+                .ByNewGameObjectMethod(InstallSubcontainer)
                 .AsSingle();
 
             Container.BindInterfacesTo<GameUIService>()
@@ -38,11 +41,29 @@ namespace Game
                 .AsSingle();
             Container.BindInterfacesAndSelfTo<AIUserRoundModel.Provider>()
                 .AsSingle();
+
             
-            Container.Bind<UIProvider<UIGame>>()
-                .FromInstance(uiGame)
-                .AsSingle();
             Container.BindInterfacesTo<UIGameController>()
+                .AsSingle();
+        }
+
+        private void InstallSubcontainer(DiContainer container)
+        {
+            container.BindInterfacesAndSelfTo<StateFactory>()
+                .AsSingle();
+            
+            container.BindInterfacesTo<StateMachine>()
+                .AsSingle();
+
+            container.InstallState<InitialSubstate>();
+            container.InstallState<UserMoveSubstate>();
+            container.InstallState<AgentAIMoveSubstate>();
+            container.InstallState<ValidateSubstate>();
+            container.InstallState<RoundResultSubstate>();
+            container.InstallState<RoundClearSubstate>();
+            container.InstallState<FinalRoundResultSubstateGameSubstate>();
+            
+            container.BindInterfacesTo<GameSubstatesFacade>()
                 .AsSingle();
         }
     }

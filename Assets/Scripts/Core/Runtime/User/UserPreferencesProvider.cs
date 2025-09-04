@@ -30,6 +30,7 @@ namespace Core.User
             Observable
                 .Merge(Current.ProfileAssetId.Skip(1).DistinctUntilChanged().AsUnitObservable())
                 .Merge(Current.TileMaterialId.Skip(1).DistinctUntilChanged().AsUnitObservable())
+                .Merge(Current.User.OnIdChanged.DistinctUntilChanged().AsUnitObservable())
                 .Merge(Current.User.Nickname.Skip(1).DistinctUntilChanged().AsUnitObservable())
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .Subscribe(_ => ForceSave())

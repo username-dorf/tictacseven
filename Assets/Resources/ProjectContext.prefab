@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8536777768353113387}
   - component: {fileID: 4742036555778402323}
   - component: {fileID: 840058177820749703}
+  - component: {fileID: -6109100497587149801}
   m_Layer: 0
   m_Name: ProjectContext
   m_TagString: Untagged
@@ -50,6 +51,7 @@ MonoBehaviour:
   _monoInstallers:
   - {fileID: 4742036555778402323}
   - {fileID: 840058177820749703}
+  - {fileID: -6109100497587149801}
   _installerPrefabs: []
   _parentNewObjectsUnderContext: 1
   _editorReflectionBakingCoverageMode: 0
@@ -89,3 +91,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: tictacseven.Multiplayer::Multiplayer.NetworkManagerInstaller
   networkManagerPrefab: {fileID: 6852697534889031472, guid: 2ad994d22564c44c29740f33ea1cc706, type: 3}
+--- !u!114 &-6109100497587149801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7384274808286940535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6634ad6b0ad4e98812203d035cdc4c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Multiplayer::Multiplayer.Server.ServerRootInstaller
+  _serverRootPrefab: {fileID: 3554605614585218646, guid: 2ecbfb6999c3c46aaae7de15f6f043e6, type: 3}

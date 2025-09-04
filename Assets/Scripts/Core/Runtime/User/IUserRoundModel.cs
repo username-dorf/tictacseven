@@ -4,7 +4,11 @@ using UniRx;
 
 namespace Core.User
 {
-    public interface IUserRoundModel
+    public interface IProfileAssetId
+    {
+        ReactiveProperty<string> ProfileAssetId { get; }
+    }
+    public interface IUserRoundModel : IProfileAssetId
     {
         UserModel UserModel { get;}
         int Owner { get;}
@@ -15,6 +19,6 @@ namespace Core.User
     public interface IAIUserRoundModel : IUserRoundModel
     {
         PolicyDifficulty Difficulty { get; }
-        string ProfileAssetId { get; }
+        
     }
 }

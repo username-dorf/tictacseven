@@ -2,18 +2,12 @@ using Zenject;
 
 namespace Core.StateMachine
 {
-    public class StateFactory : IFactory<string,IState>
+    public sealed class StateFactory
     {
-        DiContainer _container;
+        private readonly DiContainer _container;
+        public StateFactory(DiContainer container) => _container = container;
 
-        public StateFactory(DiContainer container)
-        {
-            _container = container;
-        }
-        
-        public IState Create(string id)
-        {
-            return _container.ResolveId<IState>(id);
-        }
+        public TState Get<TState>() where TState : IState
+            => (TState)_container.ResolveId<IState>(typeof(TState).Name);
     }
 }

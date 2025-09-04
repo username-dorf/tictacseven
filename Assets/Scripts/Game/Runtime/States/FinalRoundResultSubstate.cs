@@ -20,18 +20,18 @@ namespace Game.States
 
         public class Payload
         {
-            public int WinnerOwner { get; }
+            public List<int> WinnerOwners { get; }
 
-            public Payload(int winnerOwner)
+            public Payload(params int[] winnerOwners)
             {
-                WinnerOwner = winnerOwner;
+                WinnerOwners = new List<int>(winnerOwners);
             }
         }
 
         public FinalRoundResultSubstateGameSubstate(
             IStateMachine mainStateMachine,
             IGameSubstateResolver substateResolverFactory,
-            [Inject(Id = GameSubstateSettings.ROUND_MODELS_ALIAS)] List<UserRoundModel> roundModels,
+            [Inject(Id = GameSubstatesFacade.ROUND_MODELS_ALIAS)] List<UserRoundModel> roundModels,
             UserRoundModel.Provider userRoundModelProvider,
             AIUserRoundModel.Provider opponentRoundModelProvider,
             IWindowsController windowsController) : base(substateResolverFactory)
@@ -45,14 +45,14 @@ namespace Game.States
         
         protected override async UniTask EnterAsync(Payload payload, CancellationToken ct)
         {
-            UpdateRoundModels(payload.WinnerOwner);
-            var windowPayload = new UIWindowRoundResult.Payload(payload.WinnerOwner,_userRoundModelProvider.Model,_opponentRoundModelProvider.Model);
+            _roundModels.UpdateAllModels(payload.WinnerOwners);
+            var windowPayload = new UIWindowRoundResult.Payload(_userRoundModelProvider.Model,_opponentRoundModelProvider.Model);
             await _windowsController.OpenAsync<UIWindowRoundResult,UIWindowRoundResult.Payload>(windowPayload,ct);
             await UniTask.Delay(TimeSpan.FromSeconds(2f), cancellationToken: ct);
             await _mainStateMachine.ChangeStateAsync<MenuState>(CancellationToken.None);
 
         }
-        public override UniTask ExitAsync(CancellationToken cancellationToken)
+        public override UniTask ExitAsync(CancellationToken ct)
         {
             return UniTask.CompletedTask;
         }
@@ -60,15 +60,6 @@ namespace Game.States
         public override void Dispose()
         {
             
-        }
-
-        private void UpdateRoundModels(int winnerOwner)
-        {
-            foreach (var model in _roundModels)
-            {
-                var isWinnerModel = model.Owner == winnerOwner;
-                model.SetRoundResult(isWinnerModel);
-            }
         }
     }
 }

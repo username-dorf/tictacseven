@@ -1,4 +1,6 @@
-using Multiplayer.Lan;
+using Multiplayer.Client;
+using Multiplayer.Connection;
+using Multiplayer.Server;
 using Multiplayer.UI.Windows.Views;
 using Zenject;
 
@@ -8,22 +10,32 @@ namespace Multiplayer
     {
         public override void InstallBindings()
         {
-            Container.BindInterfacesTo<LanClientScanner>()
+            Container.BindInterfacesTo<ClientScanner>()
                 .AsSingle();
-            Container.BindInterfacesTo<LanHostBroadcaster>()
+            Container.BindInterfacesTo<HostBroadcaster>()
                 .AsSingle();
             Container.Bind<ConnectionController>()
                 .AsSingle();
-            Container.Bind<LanController>()
+            Container.BindInterfacesAndSelfTo<SessionController>()
                 .AsSingle();
 
             Container.BindInterfacesAndSelfTo<JoinApprovalService>()
                 .AsSingle();
             Container.Bind<JoinResponseListener>()
                 .AsSingle();
+            Container.BindInterfacesTo<HostConnectionProvider>()
+                .AsSingle();
             
             Container.Bind<UIWindowCreateHost.ViewModel>().AsTransient();
             Container.Bind<UIWindowConnectClient.ViewModel>().AsTransient();
+
+            Container.BindInterfacesTo<ServerSessionBootstrap>()
+                .AsSingle();
+
+            Container.Bind<HostBootstrapper>()
+                .AsSingle();
+            Container.BindInterfacesAndSelfTo<ClientSessionBootstrap>()
+                .AsSingle();
 
         }
     }

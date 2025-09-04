@@ -48,7 +48,7 @@ namespace Game.Entities
             _assetsLoader = new EntitySingleAssetsProvider();
         }
 
-        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner,
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner, MaterialId materialId,
             CancellationToken cancellationToken)
         {
             await WarmupAllAsync(EntityViewConfig.Default(), cancellationToken);
@@ -59,20 +59,22 @@ namespace Game.Entities
                 models[i] = new EntityModel(i + 1, owner, positions[i]);
             }
 
-            var entities = await CreateAll(models, cancellationToken);
-            var userEntitiesModel = new UserEntitiesModel(entities
+            var entities = await CreateAll(models, materialId, cancellationToken);
+            var userEntitiesModel = new UserEntitiesModel(owner,entities
                 .Select(x => (IPlaceableModel) x.model));
             var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
             return userEntitiesModel;
         }
 
-        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions, int owner,
+        public async UniTask<UserEntitiesModel> CreateAll(Vector3[] positions,
+            int owner,
+            MaterialId materialId,
             EntityPlacedModel[] placedModels,
             Vector3[,] gridPositions, CancellationToken cancellationToken)
         {
             if (placedModels is null || placedModels.Length == 0)
             {
-                return await CreateAll(positions, owner, cancellationToken);
+                return await CreateAll(positions, owner, materialId, cancellationToken);
             }
 
             await WarmupAllAsync(EntityViewConfig.Default(), cancellationToken);
@@ -95,15 +97,15 @@ namespace Game.Entities
                 }
             }
 
-            var entities = await CreateAll(models, cancellationToken);
+            var entities = await CreateAll(models, materialId, cancellationToken);
             var availableEntities = entities.Where(x => !x.model.Transform.IsMoveable.Value);
-            var userEntitiesModel = new UserEntitiesModel(availableEntities
+            var userEntitiesModel = new UserEntitiesModel(owner,availableEntities
                 .Select(x => (IPlaceableModel) x.model));
             var userEntitiesViewModel = new UserEntitiesViewModel(userEntitiesModel);
             return userEntitiesModel;
         }
 
-        private async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models,
+        private async UniTask<(EntityViewModel viewModel, EntityModel model)[]> CreateAll(EntityModel[] models, MaterialId materialId,
             CancellationToken cancellationToken)
         {
             var modelsCount = models.Length;
@@ -112,20 +114,19 @@ namespace Game.Entities
 
             for (int i = 0; i < modelsCount; i++)
             {
-                tasks[i] = Create(models[i], models[i].Transform.InitialPosition.Value, cancellationToken);
+                tasks[i] = Create(models[i], models[i].Transform.InitialPosition.Value, materialId, cancellationToken);
             }
 
             return await UniTask.WhenAll(tasks);
         }
 
         private async UniTask<(EntityViewModel viewModel, EntityModel model)> Create(EntityModel model,
-            Vector3 position, CancellationToken cancellationToken)
+            Vector3 position, MaterialId materialId, CancellationToken cancellationToken)
         {
             var viewPrefab = _assetsLoader.GetAsset(model.Data.Merit.Value);
             var view = (EntityView)GameObject.Instantiate(viewPrefab, position,
                 Quaternion.identity);
-            
-            var materialId = model.Data.Owner.Value == 2 ? MaterialId.Default : MaterialId.Opponent;
+
             var material = _materialAssetsProvider.Get(materialId);
             var valueSprite = _valueSpriteProvider.GetAsset(model.Data.Merit.Value);
             var viewModel = new EntityViewModel(model, valueSprite, material);

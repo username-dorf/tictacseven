@@ -16,7 +16,7 @@ namespace Game.States
 
         public abstract UniTask EnterAsync(CancellationToken ct);
 
-        public abstract UniTask ExitAsync(CancellationToken cancellationToken);
+        public abstract UniTask ExitAsync(CancellationToken ct);
 
         public abstract void Dispose();
     }

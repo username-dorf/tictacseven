@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Local-Feature-Multiplayer-Scenes
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Local-Feature-Multiplayer-Scenes
+  m_GUID: 54a937065cb0a408ebcfc8100f8bd65a
+  m_SerializeEntries:
+  - m_GUID: 0c85dce8281bc470591918d1cabd66a3
+    m_Address: MultiplayerGame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: e1746de9b457d4e0ba1ac93789321a02, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 30060fac7fde4430db101c97dab63b64, type: 2}
+    - {fileID: 11400000, guid: 1aba9f696965349ba83dc674b2357d9c, type: 2}

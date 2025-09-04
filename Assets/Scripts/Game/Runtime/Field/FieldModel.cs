@@ -1,22 +1,34 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Game.Entities;
 using Game.User;
 using UniRx;
 using UnityEngine;
+using Zenject;
 
 namespace Game.Field
 {
     public class FieldModel: IDisposable
     {
         public IReadOnlyReactiveDictionary<Vector2Int, EntityModel> Entities => _entities;
-        public IObservable<Vector2Int> OnEntityChanged => _onEntityChanged;
+        public IObservable<(Vector2Int,EntityModel)> OnEntityChanged => _onEntityChanged;
+        
         private ReactiveDictionary<Vector2Int, EntityModel> _entities;
         private ReactiveDictionary<Vector2Int, IPlaceableModel> _placebles = new();
-        private Subject<Vector2Int> _onEntityChanged = new();
+        
+        private Subject<(Vector2Int,EntityModel)> _onEntityChanged = new();
 
         private Vector3[,] _gridCache;
 
+        [Inject]
+        public FieldModel(int row, int column)
+        {
+            var matrix = new Vector3[row, column];
+            _gridCache = matrix;
+            _entities = CreateEmpty(matrix);
+        }
         public FieldModel(Vector3[,] grid)
         {
             _gridCache = grid;
@@ -42,8 +54,7 @@ namespace Game.Field
             }
         }
 
-        public static float[] BuildState(
-            FieldModel field,
+        public float[] BuildState(
             UserEntitiesModel player,
             UserEntitiesModel opponent,
             int unityCurrentPlayer
@@ -55,7 +66,7 @@ namespace Game.Field
             var boardOwners = new float[9];
 
             int k = 0;
-            foreach (var kvp in field.Entities.OrderBy(kv => kv.Key.x).ThenBy(kv => kv.Key.y))
+            foreach (var kvp in Entities.OrderBy(kv => kv.Key.x).ThenBy(kv => kv.Key.y))
             {
                 var cell = kvp.Value;
 
@@ -110,7 +121,7 @@ namespace Game.Field
         {
             var model = new EntityModel(placeable.Data.Merit.Value, placeable.Data.Owner.Value, position);
             _entities[coors] = model;
-            _onEntityChanged?.OnNext(coors);
+            _onEntityChanged?.OnNext((coors,model));
             TryReplacePlaced(coors, placeable);
         }
 
@@ -135,6 +146,85 @@ namespace Game.Field
             _entities?.Dispose();
             _placebles?.Dispose();
             _onEntityChanged?.Dispose();
+        }
+
+        public Dictionary<Vector2Int, EntityModel.EntityDataSnapshot> GetDataSnapshot()
+        {
+            var dict = new Dictionary<Vector2Int, EntityModel.EntityDataSnapshot>(_entities.Count);
+
+            foreach (var kv in _entities)
+            {
+                var key = kv.Key;
+                var entity = kv.Value;
+
+                if (entity.Data is EntityModel.EntityDataModel data)
+                {
+                    dict[key] = new EntityModel.EntityDataSnapshot(data);
+                }
+                else                                                      
+                {
+                    var merit = entity.Data?.Merit?.Value ?? 0;
+                    var owner = entity.Data?.Owner?.Value ?? EntityModel.EMPTY_OWNER;
+                    dict[key] = new EntityModel.EntityDataSnapshot(owner,merit);
+                }
+            }
+
+            return dict;
+        }
+
+        public void OverrideValues(ReadOnlyDictionary<Vector2Int, EntityModel.EntityDataModel> input)
+        {
+            if (input == null) return;
+
+            foreach (var kv in input)
+            {
+                if (!_entities.TryGetValue(kv.Key, out var cur))
+                    continue;
+
+                int newMerit = kv.Value.Merit.Value;
+                int newOwner = kv.Value.Owner.Value;
+
+                if (cur.Data.Merit.Value == newMerit && cur.Data.Owner.Value == newOwner)
+                    continue;
+
+                var pos = cur.Transform.Position.Value;
+
+                var updated = new EntityModel(newMerit, newOwner, pos);
+                _entities[kv.Key] = updated;
+
+                //_onEntityChanged?.OnNext((kv.Key, updated));
+
+                if (_placebles.TryGetValue(kv.Key, out var placed))
+                {
+                    placed.Transform.SetVisible(false);
+                    _placebles.Remove(kv.Key);
+                }
+            }
+        }
+
+        public bool FindDifference(Dictionary<Vector2Int, EntityModel.EntityDataSnapshot> input, out (Vector2Int coors, EntityModel.EntityDataSnapshot snapshot) difference)
+        {
+            if (input == null)
+            {
+                difference = default;
+                return false;
+            }
+
+            foreach (var kv in input)
+            {
+                if (!_entities.TryGetValue(kv.Key, out var cur))
+                    continue;
+
+                var other = kv.Value;
+                if (cur.Data.Owner.Value != other.Owner ||
+                    cur.Data.Merit.Value != other.Merit)
+                {
+                    difference = (kv.Key, other);
+                    return true;
+                }
+            }
+            difference = default;
+            return false;
         }
     }
 }

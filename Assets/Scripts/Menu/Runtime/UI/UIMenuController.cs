@@ -45,6 +45,11 @@ namespace Menu.Runtime.UI
             var connectClientButtonViewModel =
                 new ModeButtonViewModel(ct => _windowsController.OpenAsync<UIWindowConnectClient>(ct));
             Provider.UI.MultiplayerGroup.ConnectClientButton.Initialize(connectClientButtonViewModel);
+            
+            Provider.UI.BindArcadeButton(menuFieldView.ArcadeButtonView);
+            var arcadeButtonViewModel =
+                new ModeButtonViewModel(ct => { return UniTask.CompletedTask; });
+            Provider.UI.ArcadeButtonView.Initialize(arcadeButtonViewModel);
         }
 
         public void BindSubviewButtonViews(MenuFieldSubview subview)
@@ -58,6 +63,11 @@ namespace Menu.Runtime.UI
             var profileSettingsButtonViewModel =
                 new ModeButtonViewModel(ct => _windowsController.OpenAsync<UIWindowProfileSettings>(ct));
             Provider.UI.ProfileSettingsButtonView.Initialize(profileSettingsButtonViewModel);
+            
+            Provider.UI.BindSocialButton(subview.SocialButton);
+            var socialButtonViewModel =
+                new ModeButtonViewModel(ct => { return UniTask.CompletedTask; });
+            Provider.UI.SocialButtonView.Initialize(socialButtonViewModel);
         }
 
         public override void Dispose()

@@ -11,24 +11,34 @@ namespace Game.UI
 {
     public class UIGameController : UIController<UIGame>
     {
-        private IStateMachine _stateMachine;
-        private IWindowsController _windowsController;
+        protected IStateMachine StateMachine;
+        protected IWindowsController WindowsController;
 
         public UIGameController(
             UIProvider<UIGame> uiProvider,
             IStateMachine stateMachine,
             IWindowsController windowsController) : base(uiProvider)
         {
-            _windowsController = windowsController;
-            _stateMachine = stateMachine;
+            WindowsController = windowsController;
+            StateMachine = stateMachine;
         }
         public override void Initialize()
         {
-            Provider.UI.ExitButton
-                .Initialize(()=>_stateMachine.ChangeStateAsync<MenuState>(CancellationToken.None));
             
+           InitializeExitButton();
+           InitializeSettingsButton();
+        }
+
+        protected virtual void InitializeExitButton()
+        {
+            Provider.UI.ExitButton
+                .Initialize(()=>StateMachine.ChangeStateAsync<MenuState>(CancellationToken.None));
+        }
+
+        protected virtual void InitializeSettingsButton()
+        {
             Provider.UI.SettingsButton
-                .Initialize(()=>_windowsController.OpenAsync<UIWindowProfileSettings>().Forget());
+                .Initialize(()=>WindowsController.OpenAsync<UIWindowProfileSettings>().Forget());
         }
 
         public override void Dispose()

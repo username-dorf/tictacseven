@@ -31,8 +31,8 @@ namespace Game.Field
         }
         public interface IData: IDisposable
         {
-            ReadOnlyReactiveProperty<int> Merit { get;}
-            ReadOnlyReactiveProperty<int> Owner { get; }
+            IReadOnlyReactiveProperty<int> Merit { get;}
+            IReadOnlyReactiveProperty<int> Owner { get; }
         }
         public interface IEvents : IDisposable
         {

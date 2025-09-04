@@ -7,9 +7,6 @@ namespace Game.Entities
     {
         public override void InstallBindings()
         {
-            Container.Decorate<ISkinMaterialMapProvider>()
-                .With<GameSkinMaterialMapProvider>();
-            
             Container.Bind<EntitiesBackgroundFactory>()
                 .AsSingle();
             Container.Bind<EntitiesBackgroundGridFactory>()

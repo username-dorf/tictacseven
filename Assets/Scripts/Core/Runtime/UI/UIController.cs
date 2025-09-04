@@ -8,7 +8,12 @@ namespace Core.UI
     {
         
     }
-    public abstract class UIController<T> : IInitializable, IDisposable where T : IUIView
+
+    public interface IUIController<T> : IInitializable, IDisposable where T : IUIView
+    {
+        
+    }
+    public abstract class UIController<T> : IUIController<T> where T : IUIView
     {
         protected UIProvider<T> Provider { get; private set; }
         public UIController(UIProvider<T> provider)

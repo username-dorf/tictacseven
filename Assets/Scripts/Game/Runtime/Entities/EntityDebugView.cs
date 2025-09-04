@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 namespace Game.Entities
@@ -18,7 +17,9 @@ namespace Game.Entities
             if (_value>0 && _drawValue)
             {
                 Gizmos.color = Color.yellow;
-                Handles.Label(transform.position + Vector3.up * 0.1f, $"[{_value}]");
+#if UNITY_EDITOR
+                UnityEditor.Handles.Label(transform.position + Vector3.up * 0.1f, $"[{_value}]");
+#endif
             }
         }
     }

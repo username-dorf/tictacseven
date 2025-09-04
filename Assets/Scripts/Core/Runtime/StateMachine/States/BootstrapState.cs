@@ -17,7 +17,7 @@ namespace Core.StateMachine
             await _stateMachine.ChangeStateAsync<PersistantResourcesLoadState>(ct);
         }
 
-        public async UniTask ExitAsync(CancellationToken cancellationToken)
+        public async UniTask ExitAsync(CancellationToken ct)
         {
         }
 

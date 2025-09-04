@@ -15,6 +15,7 @@ namespace Core.StateMachine
             Container.InstallState<PersistantResourcesLoadState>();
             Container.InstallState<MenuState>();
             Container.InstallState<GameState>();
+            Container.InstallState<MultiplayerGameState>();
         }
     }
 
@@ -31,8 +32,7 @@ namespace Core.StateMachine
                     var disp = ctx.Container.Resolve<DisposableManager>();
                     if (state is IDisposable d)
                         disp.Add(d);
-                })
-                .NonLazy();
+                });
 
         }
     }

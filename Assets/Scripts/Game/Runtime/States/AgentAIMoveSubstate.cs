@@ -11,7 +11,6 @@ namespace Game.States
 {
     public class AgentAIMoveSubstate : GameSubstate
     {
-        public const string AGENT_MODEL_ID = "AgentAIModel";
         private FieldModel _fieldModel;
         private UserEntitiesModel _botEntitiesModel;
         private UserEntitiesController _controller;
@@ -23,8 +22,8 @@ namespace Game.States
         public AgentAIMoveSubstate(
             FieldModel fieldModel,
             FieldViewProvider fieldViewProvider,
-            [Inject(Id = AGENT_MODEL_ID)] UserEntitiesModel botEntitiesModel,
-            [Inject(Id = UserMoveSubstate.AGENT_MODEL_ID)]
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserEntitiesModel botEntitiesModel,
+            [Inject(Id = UserModelConfig.ID)]
             UserEntitiesModel userEntitiesModel,
             AgentAIController agentAIController,
             AgentThinkingAIController agentThinkingAIController,
@@ -86,7 +85,7 @@ namespace Game.States
         }
 
 
-        public override UniTask ExitAsync(CancellationToken _)
+        public override UniTask ExitAsync(CancellationToken ct)
         {
             _userRoundModel.SetAwaitingTurn(false);
             return UniTask.CompletedTask;

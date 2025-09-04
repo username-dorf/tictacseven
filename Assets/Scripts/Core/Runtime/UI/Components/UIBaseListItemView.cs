@@ -92,7 +92,7 @@ namespace Core.UI.Components
             OnUnbind();
         }
 
-        protected abstract void OnBind(TViewModel vm, CompositeDisposable cd);
+        protected abstract void OnBind(TViewModel viewModel, CompositeDisposable disposable);
 
         protected virtual void OnUnbind()
         {

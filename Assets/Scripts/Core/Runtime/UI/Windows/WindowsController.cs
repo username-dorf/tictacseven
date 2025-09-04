@@ -53,23 +53,37 @@ namespace Core.UI.Windows
             await _mutex.WaitAsync(ct);
             try
             {
-                if (Top != null) await Top.HideAsync(ct);
+                PruneDead();
 
-                _blurService.Blur.gameObject.SetActive(true);
+                var hadWindows = _stack.Count > 0;
+                var prev = Top;
+                var prevView = prev as WindowViewBase;
+
+                if (IsAlive(prev) && prevView != null && !prevView.IsClosing)
+                {
+                    try
+                    {
+                        await prevView.HideAsync(ct);
+                    }
+                    catch
+                    {
+                         /* ignore */
+                    }
+                }
+
+                if (!hadWindows)
+                    _blurService.Blur.gameObject.SetActive(true);
+
                 var parent = await _uiRoot.WaitForRootAsync(ct);
                 var sceneContainer = GetSceneContainerFor(parent) ?? _container;
-                var prefabComp = (TView) _provider.GetAsset(typeof(TView));
-                var instance = sceneContainer.InstantiatePrefabForComponent<TView>(
-                    prefabComp.gameObject, parent);
+                var prefabComp = (TView)_provider.GetAsset(typeof(TView));
+                var instance = sceneContainer.InstantiatePrefabForComponent<TView>(prefabComp.gameObject, parent);
 
                 await instance.OpenAsync(ct);
                 _stack.Push(instance);
                 return instance;
             }
-            finally
-            {
-                _mutex.Release();
-            }
+            finally { _mutex.Release(); }
         }
 
         public async UniTask<TView> OpenAsync<TView, TPayload>(TPayload payload, CancellationToken ct = default)
@@ -78,14 +92,24 @@ namespace Core.UI.Windows
             await _mutex.WaitAsync(ct);
             try
             {
-                if (Top != null) await Top.HideAsync(ct);
-                
-                _blurService.Blur.gameObject.SetActive(true);
+                PruneDead();
+
+                var hadWindows = _stack.Count > 0;
+                var prev = Top;
+                var prevView = prev as WindowViewBase;
+
+                if (IsAlive(prev) && prevView != null && !prevView.IsClosing)
+                {
+                    try { await prevView.HideAsync(ct); } catch { /* ignore */ }
+                }
+
+                if (!hadWindows)
+                    _blurService.Blur.gameObject.SetActive(true);
+
                 var parent = await _uiRoot.WaitForRootAsync(ct);
                 var sceneContainer = GetSceneContainerFor(parent) ?? _container;
-                var prefabComp = (TView) _provider.GetAsset(typeof(TView));
-                var instance = sceneContainer.InstantiatePrefabForComponent<TView>(
-                    prefabComp.gameObject, parent);
+                var prefabComp = (TView)_provider.GetAsset(typeof(TView));
+                var instance = sceneContainer.InstantiatePrefabForComponent<TView>(prefabComp.gameObject, parent);
 
                 instance.SetPayload(payload);
                 await instance.OpenAsync(ct);
@@ -93,10 +117,7 @@ namespace Core.UI.Windows
                 _stack.Push(instance);
                 return instance;
             }
-            finally
-            {
-                _mutex.Release();
-            }
+            finally { _mutex.Release(); }
         }
 
         public async UniTask CloseTopAsync(CancellationToken ct = default)
@@ -104,20 +125,31 @@ namespace Core.UI.Windows
             await _mutex.WaitAsync(ct);
             try
             {
-                if (_stack.Count == 0) 
-                    return;
-                var top = _stack.Pop();
-                await top.CloseAsync(ct);
-                if (Top != null) 
-                    await Top.ShowAsync(ct);
-                if(Top is null)
+                PruneDead();
+                if (_stack.Count == 0)
+                {
                     _blurService.Blur.gameObject.SetActive(false);
+                    return;
+                }
 
+                var top = _stack.Pop() as WindowViewBase;
+                if (top != null && IsAlive(top))
+                {
+                    try { await top.CloseAsync(ct); } catch { /* ignore */ }
+                }
+
+                PruneDead();
+                var next = Top as WindowViewBase;
+
+                if (IsAlive(next) && next != null && !next.IsClosing)
+                {
+                    try { await next.ShowAsync(ct); } catch { /* ignore */ }
+                }
+
+                if (_stack.Count == 0)
+                    _blurService.Blur.gameObject.SetActive(false);
             }
-            finally
-            {
-                _mutex.Release();
-            }
+            finally { _mutex.Release(); }
         }
 
         public async UniTask CloseAllAsync(CancellationToken ct = default)
@@ -126,24 +158,44 @@ namespace Core.UI.Windows
             try
             {
                 while (_stack.Count > 0)
-                    await _stack.Pop().CloseAsync(ct);
+                {
+                    var w = _stack.Pop() as WindowViewBase;
+                    if (IsAlive(w) && w != null)
+                    {
+                        try { await w.CloseAsync(ct); } catch { /* ignore */ }
+                    }
+                }
                 _blurService.Blur.gameObject.SetActive(false);
             }
-            finally
-            {
-                _mutex.Release();
-            }
+            finally { _mutex.Release(); }
         }
 
         public void Dispose()
         {
             _mutex?.Dispose();
         }
-        
+
         private DiContainer GetSceneContainerFor(Transform parent)
         {
             var scene = parent.gameObject.scene;
             return _sceneRegistry.GetContainerForScene(scene);
+        }
+
+        private static bool IsAlive(object w)
+        {
+            if (w is null) return false;
+            var uo = w as UnityEngine.Object;
+            return uo != null;
+        }
+
+        private void PruneDead()
+        {
+            while (_stack.Count > 0)
+            {
+                var top = _stack.Peek();
+                if (IsAlive(top)) break;
+                _stack.Pop();
+            }
         }
     }
 }

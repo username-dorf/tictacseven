@@ -166,7 +166,7 @@ namespace Game.User
             if (cfg.GameSeed.HasValue)
                 _rng = new System.Random(cfg.GameSeed.Value);
 
-            float[] state = FieldModel.BuildState(field, agentModel, playerModel, unityPlayer);
+            float[] state = field.BuildState(agentModel, playerModel, unityPlayer);
             var validTriples = BuildValidActions(field, agentModel, unityPlayer);
             if (validTriples.Count == 0) return (1, 1, 1);
 

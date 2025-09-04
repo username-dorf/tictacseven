@@ -6,15 +6,18 @@ using UnityEngine;
 namespace Game.Entities
 {
     
-    public struct EntityModel : IPlaceableModel, IDisposable
+    public class EntityModel : IPlaceableModel, IDisposable
     {
         public const int EMPTY_OWNER = 0;
 
         public IPlaceableModel.IData Data { get; }
         public IPlaceableModel.ITransform Transform { get; }
         public IPlaceableModel.IEvents Events { get; }
-
-
+        
+        public EntityModel()
+        {
+            
+        }
         public EntityModel(int value,int owner, Vector3 position)
         {
             Transform = new EntityTransformModel(position, Vector3.one*0.8f);
@@ -31,23 +34,44 @@ namespace Game.Entities
             return Data.Owner.Value == EMPTY_OWNER;
         }
         
-        public struct EntityDataModel : IPlaceableModel.IData
+        public class EntityDataModel : IPlaceableModel.IData
         {
-            public ReadOnlyReactiveProperty<int> Merit { get; }
-            public ReadOnlyReactiveProperty<int> Owner { get; }
+            private readonly ReactiveProperty<int> _merit;
+            private readonly ReactiveProperty<int> _owner;
+
+            public IReadOnlyReactiveProperty<int> Merit => _merit;
+            public IReadOnlyReactiveProperty<int> Owner => _owner;
         
             public EntityDataModel(int value, int owner)
             {
-                Merit = new ReadOnlyReactiveProperty<int>(new ReactiveProperty<int>(value));
-                Owner = new ReadOnlyReactiveProperty<int>(new ReactiveProperty<int>(owner));
+                _merit = new ReactiveProperty<int>(value);
+                _owner = new ReactiveProperty<int>(owner);
             }
 
             public void Dispose()
             {
-                Merit?.Dispose();
-                Owner?.Dispose();
+                _merit?.Dispose();
+                _owner?.Dispose();
             }
         }
+
+        public struct EntityDataSnapshot
+        {
+            public int Owner;
+            public int Merit;
+            public EntityDataSnapshot(EntityDataModel model)
+            {
+                Owner = model.Owner.Value;
+                Merit = model.Merit.Value;
+            }
+
+            public EntityDataSnapshot(int owner, int merit)
+            {
+                Owner = owner;
+                Merit = merit;
+            }
+        }
+        
         public class EntityTransformModel : IPlaceableModel.ITransform
         {
             public ReadOnlyReactiveProperty<bool> Visible { get; }

@@ -52,6 +52,7 @@ namespace Game.States
 
         public override async UniTask EnterAsync(CancellationToken ct)
         {
+            Debug.Log("Enter async initial state");
             var opponent = _opponentModelProvider.Model;
             var user = _userModelProvider.Model;
             
@@ -72,7 +73,7 @@ namespace Game.States
                 entitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 1),ct);
 
             Func<UniTask<UserEntitiesModel>> userEntitiesModelCreation = ()=>
-                _entityFactory.CreateAll(entitiesPositions, user.Owner, ct);
+                _entityFactory.CreateAll(entitiesPositions, user.Owner, user.MaterialId, ct);
            
 
             EntityPlacedModel[] prespawnPreset = null; //FieldConfig.CREATE_PRESPAWN_PRESET_1(opponentOwner);
@@ -86,7 +87,7 @@ namespace Game.States
                 opponentEntitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 0),ct);
 
             Func<UniTask<UserEntitiesModel>> opponentEntitiesModelCreation = ()=>
-                 _entityFactory.CreateAll(opponentEntitiesPositions, opponent.Owner, prespawnPreset,
+                 _entityFactory.CreateAll(opponentEntitiesPositions, opponent.Owner, opponent.MaterialId, prespawnPreset,
                     fieldGrid, ct);
             
             await UniTask.WhenAll(userEntitiesBackgroundViewAnimation(), opponentEntitiesBackgroundViewAnimation());
@@ -108,18 +109,18 @@ namespace Game.States
 
             _gameSubstatesInstaller
                 .BindFieldModel(fieldModel)
-                .BindEntitiesModel(opponentEntitiesModel, AgentAIMoveSubstate.AGENT_MODEL_ID)
-                .BindPlaceholderPresenter(userEntitiesPlaceholder, UserMoveSubstate.AGENT_MODEL_ID)
-                .BindEntitiesModel(userEntitiesModel, UserMoveSubstate.AGENT_MODEL_ID)
-                .BindPlaceholderPresenter(opponentEntitiesPlaceholder, AgentAIMoveSubstate.AGENT_MODEL_ID)
-                .BindUserRoundModel(opponent,AgentAIMoveSubstate.AGENT_MODEL_ID)
-                .BindUserRoundModel(user, UserMoveSubstate.AGENT_MODEL_ID)
+                .BindEntitiesModel(opponentEntitiesModel, UserModelConfig.OPPONENT_ID)
+                .BindPlaceholderPresenter(userEntitiesPlaceholder, UserModelConfig.ID)
+                .BindEntitiesModel(userEntitiesModel, UserModelConfig.ID)
+                .BindPlaceholderPresenter(opponentEntitiesPlaceholder, UserModelConfig.OPPONENT_ID)
+                .BindUserRoundModel(opponent,UserModelConfig.OPPONENT_ID)
+                .BindUserRoundModel(user, UserModelConfig.ID)
                 .Build();
             
             await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
         }
 
-        public override async UniTask ExitAsync(CancellationToken cancellationToken)
+        public override async UniTask ExitAsync(CancellationToken ct)
         {
         }
 
