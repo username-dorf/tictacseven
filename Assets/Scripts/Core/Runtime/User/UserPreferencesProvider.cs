@@ -1,4 +1,5 @@
 using System;
+using Core.Common;
 using UniRx;
 using Zenject;
 
@@ -11,11 +12,11 @@ namespace Core.User
     public class UserPreferencesProvider : IInitializable, IUserPreferencesProvider, IDisposable
     {
         private CompositeDisposable _disposables;
-        private IUserPreferencesRepository _repository;
+        private IRepository<UserPreferencesModel> _repository;
         private UserModel.Factory _userModelFactory;
         public UserPreferencesModel Current { get; private set; }
 
-        public UserPreferencesProvider(UserModel.Factory userModelFactory, IUserPreferencesRepository repository)
+        public UserPreferencesProvider(UserModel.Factory userModelFactory, IRepository<UserPreferencesModel> repository)
         {
             _disposables = new CompositeDisposable();
             _userModelFactory = userModelFactory;

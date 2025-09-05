@@ -132,6 +132,7 @@ namespace Core.Common
 
         public static Sequence ScaleBounceAllAxes(
             this Transform transform,
+            Action callback=null,
             float duration = 0.5f,
             float squashY = 0.1f,
             float xzOvershootMul = 0.1f,
@@ -216,6 +217,7 @@ namespace Core.Common
 
             if (t3 > 0f)
             {
+                callback?.Invoke();
                 seq.Chain(Tween.ScaleX(transform, s3.x, t3, Ease.OutSine));
                 seq.Group(Tween.ScaleY(transform, s3.y, t3, Ease.OutSine));
                 seq.Group(Tween.ScaleZ(transform, s3.z, t3, Ease.OutSine));

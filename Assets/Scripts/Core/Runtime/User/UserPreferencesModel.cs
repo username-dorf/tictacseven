@@ -1,4 +1,5 @@
 using System;
+using Core.Common;
 using Core.Data;
 using LiteNetLib.Utils;
 using Newtonsoft.Json;
@@ -7,7 +8,7 @@ using UniRx;
 namespace Core.User
 {
     [Serializable]
-    public class UserPreferencesModel
+    public class UserPreferencesModel : ISerializableModel
     {
         [JsonProperty] public UserModel User { get; private set; } = new();
         [JsonProperty] public ReactiveProperty<string> ProfileAssetId { get; private set; } = new();

@@ -7,6 +7,7 @@ namespace Core.Common
         public override void InstallBindings()
         {
             BindSkinMaterialsContracts(Container);
+            BindAppPreferences(Container);
         }
 
         private void BindSkinMaterialsContracts(DiContainer container)
@@ -16,6 +17,14 @@ namespace Core.Common
             container.Bind<SkinMaterialAssetsProvider>()
                 .AsCached();
             container.Bind<SkinPreviewCamera.Factory>()
+                .AsSingle();
+        }
+
+        private void BindAppPreferences(DiContainer container)
+        {
+            container.BindInterfacesTo<AppPreferencesRepository>()
+                .AsSingle();
+            container.BindInterfacesTo<AppPreferencesProvider>()
                 .AsSingle();
         }
     }

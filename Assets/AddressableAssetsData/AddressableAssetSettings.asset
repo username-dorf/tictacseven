@@ -59,10 +59,12 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 0
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
+  - {fileID: 11400000, guid: 464ec874dff96429e83774c9da12e972, type: 2}
   - {fileID: 11400000, guid: 7d9698291f93941a0953968b7a8ad4a9, type: 2}
   - {fileID: 11400000, guid: 24b72a04d48b946f48d1d3184e8da270, type: 2}
   - {fileID: 11400000, guid: 3960a8435a92942a09fe7bda94deef28, type: 2}
   - {fileID: 11400000, guid: e965b2a2edab84a93a8512c28ffd481b, type: 2}
+  - {fileID: 11400000, guid: f865496fce84e46e1b6cd3f42ff5f031, type: 2}
   - {fileID: 11400000, guid: 441ea82aab3984910a38bfb78fa4e4e5, type: 2}
   - {fileID: 11400000, guid: e734b9a49ca57472aa905d36e8525fba, type: 2}
   - {fileID: 11400000, guid: e033f82b1edb04e33bc40123e709f659, type: 2}
@@ -117,6 +119,8 @@ MonoBehaviour:
     - material
     - window
     - profile
+    - sfx
+    - music
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 017708a5b5c144b1987e2afc46b56888, type: 2}

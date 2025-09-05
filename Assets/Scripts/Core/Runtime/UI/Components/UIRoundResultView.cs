@@ -125,7 +125,7 @@ namespace Core.UI.Components
                 var userProfileSprites = profileSpritesProvider.GetAsset(userProfileAssetId);
                 var userAvatarEmotion = ProfileEmotion.Default;
                 ProfileSprite = new ReactiveProperty<Sprite>(userProfileSprites.GetEmotionSprite(userAvatarEmotion));
-                Username = new ReadOnlyReactiveProperty<string>(model.UserModel.Nickname);
+                Username = model.UserModel.Nickname.ToReadOnlyReactiveProperty();
                 RoundResults = model.RoundResults;
                 AwaitingTurn = model.AwaitingTurn.ToReadOnlyReactiveProperty();
             }
@@ -136,7 +136,7 @@ namespace Core.UI.Components
                 var opponentAvatarEmotion = ProfileEmotion.Default;
                 var opponentProfileSprites = profileSpritesProvider.GetAsset(model.ProfileAssetId.Value);
                 ProfileSprite = new ReactiveProperty<Sprite>(opponentProfileSprites.GetEmotionSprite(opponentAvatarEmotion));
-                Username = new ReadOnlyReactiveProperty<string>(model.UserModel.Nickname);
+                Username = model.UserModel.Nickname.ToReadOnlyReactiveProperty();
                 RoundResults = model.RoundResults;
                 AwaitingTurn = model.AwaitingTurn.ToReadOnlyReactiveProperty();
             }

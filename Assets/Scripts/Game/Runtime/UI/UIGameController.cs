@@ -38,7 +38,7 @@ namespace Game.UI
         protected virtual void InitializeSettingsButton()
         {
             Provider.UI.SettingsButton
-                .Initialize(()=>WindowsController.OpenAsync<UIWindowProfileSettings>().Forget());
+                .Initialize(()=>WindowsController.OpenAsync<UIWindowSettings>().Forget());
         }
 
         public override void Dispose()

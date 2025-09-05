@@ -9,6 +9,7 @@ using Menu.UI;
 using Menu.UIWorld;
 using UniRx;
 using UnityEngine;
+using Zenject;
 
 namespace Menu.Runtime.UIWorld
 {
@@ -23,6 +24,7 @@ namespace Menu.Runtime.UIWorld
         [field: SerializeField] public UIWorldButtonView BackButtonView { get; protected set; }
         
         [SerializeField] private Transform meshTransform;
+        [Inject] private ModeButtonViewModel.Factory _viewModelFactory;
 
         private void Awake()
         {
@@ -36,8 +38,8 @@ namespace Menu.Runtime.UIWorld
                 .Subscribe(OnViewStateChanged)
                 .AddTo(this);
             
-            MultiplayerButtonView.Initialize(new ModeButtonViewModel(ct => viewModel.CallMultiplayerButtonsSet()));
-            BackButtonView.Initialize(new ModeButtonViewModel(ct => viewModel.CallBaseButtonsSet()));
+            MultiplayerButtonView.Initialize(_viewModelFactory.Create(ct => viewModel.CallMultiplayerButtonsSet()));
+            BackButtonView.Initialize(_viewModelFactory.Create(ct => viewModel.CallBaseButtonsSet()));
         }
 
         public async UniTask PlayScaleAsync(CancellationToken ct)
@@ -174,9 +176,11 @@ namespace Menu.Runtime.UIWorld
     {
         private AssetProvider _assetProvider;
         private UIMenuController _uiMenuController;
+        private DiContainer _diContainer;
 
-        public MenuFieldViewFactory(UIMenuController uiMenuController)
+        public MenuFieldViewFactory(DiContainer diContainer,UIMenuController uiMenuController)
         {
+            _diContainer = diContainer;
             _uiMenuController = uiMenuController;
             _assetProvider = new AssetProvider();
         }
@@ -187,7 +191,7 @@ namespace Menu.Runtime.UIWorld
             var prefab = _assetProvider.GetAsset();
             if(prefab is null)
                 return null;
-            var view = GameObject.Instantiate(prefab);
+            var view = _diContainer.InstantiatePrefabForComponent<MenuFieldView>(prefab);
             if (view is null)
                 throw new Exception("Failed to instantiate FieldView from prefab");
             _uiMenuController.BindButtonViews(view);

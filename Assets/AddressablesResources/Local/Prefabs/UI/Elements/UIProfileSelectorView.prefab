@@ -141,9 +141,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 284deeedc7304991a3b4e25cb1658bef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: tictacseven.Core::Core.UI.Components.UIProfileSelectorView
+  previousButton: {fileID: 2388212971669982042}
+  nextButton: {fileID: 8516867619243648554}
   profileView: {fileID: 7286145504096943575}
-  previousButton: {fileID: 6832182677059787034}
-  nextButton: {fileID: 7664813363946061106}
 --- !u!1 &4250964836739856889
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,6 +231,7 @@ GameObject:
   - component: {fileID: 8581413880186095602}
   - component: {fileID: 6817602926707460460}
   - component: {fileID: 6832182677059787034}
+  - component: {fileID: 2388212971669982042}
   m_Layer: 5
   m_Name: PreviousButton
   m_TagString: Untagged
@@ -339,6 +340,19 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2388212971669982042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5951749831067510794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 671491c886ecc4437a832cdd0f978d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Core::UIButtonView
+  button: {fileID: 6832182677059787034}
 --- !u!1 &8252605152319319339
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,6 +365,7 @@ GameObject:
   - component: {fileID: 681367469385637501}
   - component: {fileID: 2491153963702868989}
   - component: {fileID: 7664813363946061106}
+  - component: {fileID: 8516867619243648554}
   m_Layer: 5
   m_Name: NextButton
   m_TagString: Untagged
@@ -459,3 +474,16 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8516867619243648554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8252605152319319339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 671491c886ecc4437a832cdd0f978d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Core::UIButtonView
+  button: {fileID: 7664813363946061106}

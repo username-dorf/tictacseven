@@ -1,3 +1,4 @@
+using Core.Audio;
 using Core.Common;
 using Core.StateMachine;
 using Core.UI;
@@ -16,6 +17,7 @@ namespace Core
             UIInstaller.Install(Container);
             UserInstaller.Install(Container);
             CommonInstaller.Install(Container);
+            AudioInstaller.Install(Container);
             BindBootstrap(Container);
         }
 

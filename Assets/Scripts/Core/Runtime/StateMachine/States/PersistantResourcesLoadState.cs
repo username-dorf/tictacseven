@@ -1,4 +1,5 @@
 using System.Threading;
+using Core.Audio;
 using Core.Common;
 using Core.UI.Windows;
 using Core.User;
@@ -13,13 +14,16 @@ namespace Core.StateMachine
         private ProfileSpriteSetsProvider _profileSpritesProvider;
         private WindowsAssetsProvider _windowsAssetsProvider;
         private SkinMaterialAssetsProvider _skinMaterialAssetsProvider;
+        private AudioAssetsPreloader _audioAssetsPreloader;
 
         public PersistantResourcesLoadState(
             IStateMachine stateMachine,
             WindowsAssetsProvider windowsAssetsProvider,
             ProfileSpriteSetsProvider profileSpritesProvider,
-            SkinMaterialAssetsProvider skinMaterialAssetsProvider )
+            SkinMaterialAssetsProvider skinMaterialAssetsProvider,
+            AudioAssetsPreloader audioAssetsPreloader)
         {
+            _audioAssetsPreloader = audioAssetsPreloader;
             _skinMaterialAssetsProvider = skinMaterialAssetsProvider;
             _windowsAssetsProvider = windowsAssetsProvider;
             _stateMachine = stateMachine;
@@ -27,6 +31,7 @@ namespace Core.StateMachine
         }
         public async UniTask EnterAsync(CancellationToken ct)
         {
+            await _audioAssetsPreloader.LoadAssetsAsync(ct);
             await _profileSpritesProvider.LoadAssetsByLabels(ct, Addressables.MergeMode.Intersection, "profile",
                 "sprite");
 

@@ -7,18 +7,13 @@ namespace Core.UI.Components
 {
     public abstract class UISelectorView : MonoBehaviour
     {
-        [SerializeField] private Button previousButton;
-        [SerializeField] private Button nextButton;
+        [SerializeField] private UIButtonView previousButton;
+        [SerializeField] private UIButtonView nextButton;
         
         public virtual void Initialize(Action onNext, Action onPrevious)
         {
-            previousButton.OnClickAsObservable()
-                .Subscribe(_ => onPrevious?.Invoke())
-                .AddTo(this);
-            
-            nextButton.OnClickAsObservable()
-                .Subscribe(_ => onNext?.Invoke())
-                .AddTo(this);
+            previousButton.Initialize(onPrevious);
+            nextButton.Initialize(onNext);
         }
     }
 }
