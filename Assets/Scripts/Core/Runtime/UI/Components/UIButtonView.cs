@@ -17,7 +17,7 @@ public class UIButtonView : MonoBehaviour
             .Subscribe(_ =>
             {
                 callback?.Invoke();
-                _signalBus.Fire(new SignalSfxPlay(SfxKey.Ui_Click));
+                _signalBus?.Fire(new SignalSfxPlay(SfxKey.Ui_Click));
             })
             .AddTo(this);
     }

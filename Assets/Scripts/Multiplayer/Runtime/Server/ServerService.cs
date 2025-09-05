@@ -40,7 +40,7 @@ namespace Multiplayer.Server
         }
         private void OnClientLeaveSessionNotice(NetworkConnection arg1, ClientLeaveSessionNotice arg2, Channel arg3)
         {
-            InstanceFinder.ServerManager.Broadcast(new TerminateSession());
+            InstanceFinder.ServerManager.Broadcast(new TerminateSession(){ClientId = arg2.ClientId, Reason = TerminateSessionReason.CLIENT_LEAVE});
         }
 
         public void StopSession()

@@ -9,7 +9,11 @@ namespace Core.UI.Windows.Views
 {
     public class UIWindowProfileSettings : WindowView<UIWindowProfileSettings.ViewModel>
     {
+        [Header("Editor only")]
+        [SerializeField] private GameObject editorContainer;
+        [SerializeField] private UIButtonView randomIdButton;
         [SerializeField] private UIStringEditView idEditView;
+        [Space]
         [SerializeField] private UIStringEditView stringEditView;
         [SerializeField] private UIProfileSelectorView profileSelectorView;
         [SerializeField] private UIEntitySkinSelectorView entitySkinSelectorView;
@@ -18,7 +22,7 @@ namespace Core.UI.Windows.Views
         protected override async UniTask BindViewAsync(ViewModel viewModel, CancellationToken ct)
         {
             closeButton.Initialize(viewModel.CloseWindow);
-            viewModel.InitializeIdEditView(idEditView);
+            viewModel.InitializeIdEditView(idEditView,randomIdButton,editorContainer);
             viewModel.InitializeNicknameEditView(stringEditView);
             viewModel.InitializeProfileSelectorView(profileSelectorView);
             await viewModel.InitializeSkinViewAsync(entitySkinSelectorView, ct);
@@ -67,10 +71,10 @@ namespace Core.UI.Windows.Views
                 var presenter = new UINicknameEditPresenter(view, _userPreferencesProvider);
                 presenter.Initialize();
             }
-            public void InitializeIdEditView(UIStringEditView view)
+            public void InitializeIdEditView(UIStringEditView view, UIButtonView randomButton, GameObject parent)
             {
                 var presenter = new UIIdEditPresenter(view, _userPreferencesProvider);
-                presenter.Initialize();
+                presenter.Initialize(randomButton, parent);
 #if !UNITY_EDITOR
                 presenter.SetVisible(false);
 #endif

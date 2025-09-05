@@ -7,6 +7,12 @@ namespace Multiplayer.Contracts
     /// </summary>
     public struct TerminateSession : IBroadcast
     {
-        
+        public string ClientId;
+        public string Reason;
+    }
+
+    public class TerminateSessionReason
+    {
+        public const string CLIENT_LEAVE = "client leave game";
     }
 }

@@ -7,6 +7,6 @@ namespace Multiplayer.Contracts
     /// </summary>
     public struct ClientLeaveSessionNotice : IBroadcast
     {
-        
+        public string ClientId;
     }
 }

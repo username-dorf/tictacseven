@@ -60,18 +60,41 @@ namespace Core.UI.Windows.Views
         }
         public class ViewModel : IViewModel, IPayloadReceiver<Payload>
         {
+            private IWindowsController _windowsController;
             public ReactiveProperty<string> Information { get; private set; }
             public ReactiveProperty<bool> HasCancel { get; private set; }
             public ReactiveProperty<Action> OnAccept { get; private set; }
             public ReactiveProperty<Action> OnCancel { get; private set; }
 
+            public ViewModel(IWindowsController windowsController)
+            {
+                _windowsController = windowsController;
+            }
+
             public void SetPayload(Payload payload)
             {
+                void OnAcceptAnClose()
+                {
+                    payload?.OnAccept?.Invoke();
+                    Close();
+                }
+
+                void OnCancelAndClose()
+                {
+                    payload?.OnCancel?.Invoke();
+                    Close();
+                }
+                
                 Information = new ReactiveProperty<string>(payload.Information);
-                OnAccept = new ReactiveProperty<Action>(payload.OnAccept);
+                OnAccept = new ReactiveProperty<Action>(OnAcceptAnClose);
                 var hasCancel = payload.OnCancel != null;
                 HasCancel = new ReactiveProperty<bool>(hasCancel);
-                OnCancel = hasCancel ? new ReactiveProperty<Action>(payload.OnCancel) : new ReactiveProperty<Action>();
+                OnCancel = hasCancel ? new ReactiveProperty<Action>(OnCancelAndClose) : new ReactiveProperty<Action>();
+            }
+
+            private void Close()
+            {
+                _ = _windowsController.CloseTopAsync();
             }
 
             public void Dispose()

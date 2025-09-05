@@ -1,6 +1,9 @@
 using System;
 using System.Threading;
 using Core.StateMachine;
+using Core.UI.Windows;
+using Core.UI.Windows.Views;
+using Core.User;
 using Cysharp.Threading.Tasks;
 using FishNet;
 using Game.States;
@@ -16,9 +19,17 @@ namespace Multiplayer.Client
     {
         private IStateMachine _stateMachine;
         private IStateMachine _substateMachine;
+        private IWindowsController _windowsController;
+        private IUserPreferencesProvider _userPreferencesProvider;
 
-        public ClientSubstateController(IStateMachine stateMachine, IGameSubstateResolver substateResolver)
+        public ClientSubstateController(
+            IStateMachine stateMachine,
+            IWindowsController windowsController,
+            IGameSubstateResolver substateResolver,
+            IUserPreferencesProvider userPreferencesProvider)
         {
+            _userPreferencesProvider = userPreferencesProvider;
+            _windowsController = windowsController;
             _stateMachine = stateMachine;
             _substateMachine = substateResolver.Resolve<IStateMachine>();
 
@@ -40,14 +51,26 @@ namespace Multiplayer.Client
 
         private void OnTerminateRequested(TerminateSession arg1, Channel arg2)
         {
-            _stateMachine.ChangeStateAsync<MenuState>(CancellationToken.None)
+            var ct = CancellationToken.None;
+            _stateMachine.ChangeStateAsync<MenuState>(ct)
                 .ContinueWith(()=>InstanceFinder.ClientManager.Broadcast(new TerminateSessionResponse()))
+                .ContinueWith(()=>OnTerminateSessionApproved(arg1,ct))
                 .Forget();
         }
         private void OnClientTurn(ClientTurn request, Channel channel)
         {
             _substateMachine.ChangeStateAsync<TurnSubstate,ClientTurn>(request, CancellationToken.None)
                 .Forget();
+        }
+
+        private async UniTask OnTerminateSessionApproved(TerminateSession request, CancellationToken ct)
+        {
+            if(string.IsNullOrEmpty(request.Reason))
+                return;
+            if(request.ClientId == _userPreferencesProvider.Current.User.Id)
+                return;
+            var payload = new UIWindowModal.Payload(request.Reason, null);
+            _windowsController.OpenAsync<UIWindowModal, UIWindowModal.Payload>(payload, ct);
         }
         public void Dispose()
         {

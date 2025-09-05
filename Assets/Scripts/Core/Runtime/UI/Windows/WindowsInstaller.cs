@@ -25,6 +25,7 @@ namespace Core.UI.Windows
             Container.Bind<UIWindowRoundResult.ViewModel>().AsTransient();
             Container.Bind<UIWindowProfileSettings.ViewModel>().AsTransient();
             Container.Bind<UIWindowSettings.ViewModel>().AsTransient();
+            Container.Bind<UIWindowModal.ViewModel>().AsTransient();
         }
     }
 }

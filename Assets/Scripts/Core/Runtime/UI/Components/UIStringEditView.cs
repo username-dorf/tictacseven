@@ -1,6 +1,7 @@
 using System;
 using Core.User;
 using TMPro;
+using UniRx;
 using UnityEngine;
 
 namespace Core.UI.Components
@@ -9,10 +10,14 @@ namespace Core.UI.Components
     {
         [SerializeField] public TMP_InputField inputField;
 
-        public void Initialize(string nickname, Action<string> onNicknameChanged)
+        public void Initialize(string nickname, IObservable<string> onChangeNickname, Action<string> onNicknameChanged)
         {
             inputField.text = nickname;
             inputField.onEndEdit.AddListener(value=>onNicknameChanged?.Invoke(value));
+
+            if(onChangeNickname is not null)
+                onChangeNickname.Subscribe(value=>inputField.text = value)
+                    .AddTo(this);
         }
     }
 
@@ -31,7 +36,7 @@ namespace Core.UI.Components
         public void Initialize()
         {
             var current = _userPreferencesProvider.Current.User.Nickname.Value;
-            _view.Initialize(current,OnEndEdit);
+            _view.Initialize(current,null,OnEndEdit);
         }
 
         private void OnEndEdit(string nickname)
@@ -43,6 +48,7 @@ namespace Core.UI.Components
     {
         private UIStringEditView _view;
         private IUserPreferencesProvider _userPreferencesProvider;
+        private GameObject _parent;
 
         public UIIdEditPresenter(UIStringEditView view,
             IUserPreferencesProvider userPreferencesProvider)
@@ -51,15 +57,17 @@ namespace Core.UI.Components
             _view = view;
         }
 
-        public void Initialize()
+        public void Initialize(UIButtonView randomButton, GameObject parent)
         {
+            _parent = parent;
             var current = _userPreferencesProvider.Current.User.Id;
-            _view.Initialize(current,OnEndEdit);
+            _view.Initialize(current,_userPreferencesProvider.Current.User.OnIdChanged,OnEndEdit);
+            randomButton.Initialize(ChangeIdToRandom);
         }
 
         public void SetVisible(bool isVisible)
         {
-            _view.gameObject.SetActive(isVisible);
+            _parent.SetActive(isVisible);
         }
 
         private void OnEndEdit(string id)
@@ -67,6 +75,12 @@ namespace Core.UI.Components
             #if UNITY_EDITOR
             _userPreferencesProvider.Current.User.ChangeId(id);
             #endif
+        }
+
+        private void ChangeIdToRandom()
+        {
+            var id = Guid.NewGuid().ToString();
+            _userPreferencesProvider.Current.User.ChangeId(id);
         }
     }
 }
