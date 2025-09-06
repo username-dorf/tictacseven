@@ -18,7 +18,6 @@ namespace Multiplayer
 {
     public class MultiplayerGameMonoInstaller : MonoInstaller
     {
-        [SerializeField] private UIProvider<UIGame> uiGame; 
         public override void InstallBindings()
         {
             FieldInstaller.Install(Container);
@@ -38,10 +37,6 @@ namespace Multiplayer
             Container.BindInterfacesAndSelfTo<UserRoundModel.Provider>()
                 .AsSingle();
             
-            
-            Container.Bind<UIProvider<UIGame>>()
-                .FromInstance(uiGame)
-                .AsSingle();
             Container.BindInterfacesTo<UIMultiplayerController>()
                 .AsSingle();
         }
