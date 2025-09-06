@@ -10,9 +10,15 @@ namespace Core.UI.Components
     {
         [SerializeField] public TMP_InputField inputField;
 
-        public void Initialize(string nickname, IObservable<string> onChangeNickname, Action<string> onNicknameChanged)
+        public void Initialize(string inputValue, Action<string> onEndEdit)
         {
-            inputField.text = nickname;
+            inputField.text = inputValue;
+            inputField.onEndEdit.AddListener(value=>onEndEdit?.Invoke(value));
+
+        }
+        public void Initialize(string inputValue, IObservable<string> onChangeNickname, Action<string> onNicknameChanged)
+        {
+            inputField.text = inputValue;
             inputField.onEndEdit.AddListener(value=>onNicknameChanged?.Invoke(value));
 
             if(onChangeNickname is not null)
@@ -36,7 +42,7 @@ namespace Core.UI.Components
         public void Initialize()
         {
             var current = _userPreferencesProvider.Current.User.Nickname.Value;
-            _view.Initialize(current,null,OnEndEdit);
+            _view.Initialize(current,OnEndEdit);
         }
 
         private void OnEndEdit(string nickname)

@@ -99,7 +99,7 @@ namespace Game.User
 
             public void Dispose()
             {
-                _model?.Dispose();
+               
             }
         }
     }
