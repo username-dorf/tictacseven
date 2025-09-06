@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 
 namespace Core.AssetProvider
 {
-    public class EntitySingleAssetsProvider : AssetsProvider<MaterialApplicableView, int>
+    public class EntitySingleAssetsProvider : AssetsProvider<BaseEntityView, int>
     {
         private const string ASSET_PATH = "Entity_Base_tiled";
 
@@ -18,7 +18,7 @@ namespace Core.AssetProvider
             return base.LoadAssets(ct, ASSET_PATH);
         }
 
-        public static int SelectKey(MaterialApplicableView gameObject)
+        public static int SelectKey(IMaterialApplicableView gameObject)
         {
             return 1;
         }

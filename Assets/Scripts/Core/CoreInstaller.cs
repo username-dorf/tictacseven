@@ -3,6 +3,7 @@ using Core.Common;
 using Core.StateMachine;
 using Core.UI;
 using Core.User;
+using Core.VFX;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -18,6 +19,7 @@ namespace Core
             UserInstaller.Install(Container);
             CommonInstaller.Install(Container);
             AudioInstaller.Install(Container);
+            FxInstaller.Install(Container);
             BindBootstrap(Container);
         }
 

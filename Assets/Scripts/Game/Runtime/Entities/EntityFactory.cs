@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
 using UnityEngine;
+using Zenject;
 
 namespace Game.Entities
 {
@@ -32,16 +33,19 @@ namespace Game.Entities
 
     public class EntityFactory :IDisposable
     {
-        private AssetsProvider<MaterialApplicableView, int> _assetsLoader;
+        private AssetsProvider<BaseEntityView, int> _assetsLoader;
         private FieldViewProvider _fieldViewProvider;
         private EntitiesValueSpriteProvider _valueSpriteProvider;
         private EntitiesMaterialAssetsProvider _materialAssetsProvider;
+        private DiContainer _diContainer;
 
         public EntityFactory(
+            DiContainer diContainer,
             FieldViewProvider fieldViewProvider,
             EntitiesValueSpriteProvider valueSpriteProvider,
             EntitiesMaterialAssetsProvider materialAssetsProvider)
         {
+            _diContainer = diContainer;
             _materialAssetsProvider = materialAssetsProvider;
             _valueSpriteProvider = valueSpriteProvider;
             _fieldViewProvider = fieldViewProvider;
@@ -114,7 +118,7 @@ namespace Game.Entities
 
             for (int i = 0; i < modelsCount; i++)
             {
-                tasks[i] = Create(models[i], models[i].Transform.InitialPosition.Value, materialId, cancellationToken);
+                tasks[i] = Create(models[i], models[i].Transform.InitialPosition, materialId, cancellationToken);
             }
 
             return await UniTask.WhenAll(tasks);
@@ -129,7 +133,7 @@ namespace Game.Entities
 
             var material = _materialAssetsProvider.Get(materialId);
             var valueSprite = _valueSpriteProvider.GetAsset(model.Data.Merit.Value);
-            var viewModel = new EntityViewModel(model, valueSprite, material);
+            var viewModel = _diContainer.Instantiate<EntityViewModel>(new object[]{model, valueSprite, material});
             view.Initialize(viewModel, _fieldViewProvider);
             return (viewModel, model);
         }

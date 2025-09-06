@@ -144,7 +144,7 @@ namespace Game.Entities
                 var dict = new Dictionary<int, EntityView>();
                 foreach (var placeableModel in userEntitiesModel.Entities)
                 {
-                    var position = placeableModel.Transform.InitialPosition.Value+new Vector3(0,-1f,0);
+                    var position = placeableModel.Transform.InitialPosition+new Vector3(0,-1f,0);
                     var placeholder = Instantiate(prefab, position, Quaternion.identity);
                     placeholder.transform.localScale = Vector3.one*0.8f;
                     dict.Add(placeableModel.Data.Merit.Value, placeholder);

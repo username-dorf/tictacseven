@@ -332,7 +332,7 @@ public struct MeshBoundsLocal
 
     public static class Buttons
     {
-        public static MeshBoundsLocal GetLocalBounds(Transform t)
+        public static MeshBoundsLocal GetLocalBounds(this Transform t)
         {
             var mf = t.GetComponent<MeshFilter>();
             var smr = t.GetComponent<SkinnedMeshRenderer>();
@@ -364,7 +364,7 @@ public struct MeshBoundsLocal
             }
         }
 
-        public static Vector3 AnchorLocalFrom01(in MeshBoundsLocal b, Vector3 uvw01)
+        public static Vector3 AnchorLocalFrom01(this in MeshBoundsLocal b, Vector3 uvw01)
         {
             return new Vector3(
                 Mathf.Lerp(b.min.x, b.max.x, Mathf.Clamp01(uvw01.x)),
@@ -413,14 +413,14 @@ public struct MeshBoundsLocal
             seq.Group(Tween.ScaleX(button, s1.x, t1, Ease.OutCubic));
             seq.Group(Tween.ScaleY(button, s1.y, t1, Ease.OutCubic));
             seq.Group(Tween.ScaleZ(button, s1.z, t1, Ease.OutCubic));
-            seq.Group(Tween.LocalPosition(button, p1, t1, Ease.OutCubic));
+            //seq.Group(Tween.LocalPosition(button, p1, t1, Ease.OutCubic));
 
             if (t2 > 0f)
             {
                 seq.Chain(Tween.ScaleX(button, s2.x, t2, Ease.OutSine));
                 seq.Group(Tween.ScaleY(button, s2.y, t2, Ease.OutSine));
                 seq.Group(Tween.ScaleZ(button, s2.z, t2, Ease.OutSine));
-                seq.Group(Tween.LocalPosition(button, p2, t2, Ease.OutSine));
+                //seq.Group(Tween.LocalPosition(button, p2, t2, Ease.OutSine));
             }
 
             return seq;
@@ -449,14 +449,14 @@ public struct MeshBoundsLocal
             seq.Group(Tween.ScaleX(button, s1.x, t1, Ease.OutCubic));
             seq.Group(Tween.ScaleY(button, s1.y, t1, Ease.OutCubic));
             seq.Group(Tween.ScaleZ(button, s1.z, t1, Ease.OutCubic));
-            seq.Group(Tween.LocalPosition(button, p1, t1, Ease.OutCubic));
+            //seq.Group(Tween.LocalPosition(button, p1, t1, Ease.OutCubic));
 
             if (t2 > 0f)
             {
                 seq.Chain(Tween.ScaleX(button, s2.x, t2, Ease.OutSine));
                 seq.Group(Tween.ScaleY(button, s2.y, t2, Ease.OutSine));
                 seq.Group(Tween.ScaleZ(button, s2.z, t2, Ease.OutSine));
-                seq.Group(Tween.LocalPosition(button, p2, t2, Ease.OutSine));
+                //seq.Group(Tween.LocalPosition(button, p2, t2, Ease.OutSine));
             }
 
             return seq;
@@ -480,7 +480,7 @@ public struct MeshBoundsLocal
             seq.Group(Tween.ScaleX(button, sPressed.x, finishTime, Ease.OutCubic));
             seq.Group(Tween.ScaleY(button, sPressed.y, finishTime, Ease.OutCubic));
             seq.Group(Tween.ScaleZ(button, sPressed.z, finishTime, Ease.OutCubic));
-            seq.Group(Tween.LocalPosition(button, pPressed, finishTime, Ease.OutCubic));
+            //seq.Group(Tween.LocalPosition(button, pPressed, finishTime, Ease.OutCubic));
             return seq;
         }
     }

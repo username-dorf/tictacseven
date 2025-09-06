@@ -43,8 +43,9 @@ namespace Game.Field
         {
             void ResetPlaceablePosition()
             {
-                placeableModel.Transform.SetPosition(placeableModel.Transform.InitialPosition.Value);
-                Debug.Log($"{placeableModel.Data.Merit.Value} by {placeableModel.Data.Owner.Value} Position {placeableModel.Transform.Position.Value} reset to initial {placeableModel.Transform.InitialPosition.Value}");
+                placeableModel.Transform.SetPosition(placeableModel.Transform.InitialPosition);
+                Debug.Log($"{placeableModel.Data.Merit.Value} by {placeableModel.Data.Owner.Value} " +
+                          $"Position {placeableModel.Transform.Position.Value} reset to initial {placeableModel.Transform.InitialPosition}");
             }
             try
             {

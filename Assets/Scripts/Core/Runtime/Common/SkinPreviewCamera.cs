@@ -10,10 +10,10 @@ namespace Core.Common
     public class SkinPreviewCamera : MonoBehaviour
     {
         [SerializeField] private Camera camera;
-        public MaterialApplicableView PreviewView { get; private set; }
+        public IMaterialApplicableView PreviewView { get; private set; }
         public RenderTexture RenderTexture { get; private set; }
         
-        public void Initialize(MaterialApplicableView previewView)
+        public void Initialize(IMaterialApplicableView previewView)
         {
             this.PreviewView = previewView;
             RenderTexture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
@@ -54,7 +54,7 @@ namespace Core.Common
                 _assetProvider = new AssetProvider();
             }
             
-            public async UniTask<SkinPreviewCamera> Create(MaterialApplicableView tilePrefab, Material skinMaterial, CancellationToken ct)
+            public async UniTask<SkinPreviewCamera> Create(BaseEntityView tilePrefab, Material skinMaterial, CancellationToken ct)
             {
                 _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(ct);
 

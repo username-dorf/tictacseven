@@ -9,9 +9,10 @@ namespace Game.Field
         public interface ITransform: IDisposable
         {
             ReadOnlyReactiveProperty<bool> Visible { get; }
-            ReadOnlyReactiveProperty<Vector3> Position { get; }
-            ReadOnlyReactiveProperty<Vector3> Scale { get; }
-            ReadOnlyReactiveProperty<Vector3> InitialPosition { get; }
+            IReadOnlyReactiveProperty<Vector3> Position { get; }
+            IReadOnlyReactiveProperty<Vector3> Scale { get; }
+            Vector3 InitialPosition { get; }
+            Vector3 InitialScale { get; }
             
             /// <summary>
             /// Indicates if it can be moved, usually after placement.

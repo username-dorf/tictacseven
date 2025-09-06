@@ -75,10 +75,10 @@ namespace Game.Entities
         public class EntityTransformModel : IPlaceableModel.ITransform
         {
             public ReadOnlyReactiveProperty<bool> Visible { get; }
-            public ReadOnlyReactiveProperty<Vector3> Position { get;}
-            public ReadOnlyReactiveProperty<Vector3> Scale { get; }
-            public ReadOnlyReactiveProperty<Vector3> InitialPosition { get; }
-            public ReadOnlyReactiveProperty<Vector3> InitialScale { get; }
+            public IReadOnlyReactiveProperty<Vector3> Position => _position;
+            public IReadOnlyReactiveProperty<Vector3> Scale => _scale;
+            public Vector3 InitialPosition { get; }
+            public Vector3 InitialScale { get; }
             public ReadOnlyReactiveProperty<bool> IsMoveable { get; }
             public ReadOnlyReactiveProperty<bool> IsSelected { get; }
             public ReadOnlyReactiveProperty<bool> IsMoving { get; }
@@ -98,8 +98,8 @@ namespace Game.Entities
             {
                 _position = new ReactiveProperty<Vector3>(position);
                 _scale = new ReactiveProperty<Vector3>(scale);
-                InitialPosition = new ReadOnlyReactiveProperty<Vector3>(new ReactiveProperty<Vector3>(position));
-                InitialScale = new ReadOnlyReactiveProperty<Vector3>(new ReactiveProperty<Vector3>(scale));
+                InitialPosition = position;
+                InitialScale = scale;
                 
                 _isMoveable = new ReactiveProperty<bool>(true);
                 _isSelected = new ReactiveProperty<bool>(false);
@@ -107,8 +107,6 @@ namespace Game.Entities
                 _isMoving = new ReactiveProperty<bool>(false);
                 _isVisible = new ReactiveProperty<bool>(true);
                 
-                Position = new ReadOnlyReactiveProperty<Vector3>(_position);
-                Scale = new ReadOnlyReactiveProperty<Vector3>(_scale);
                 IsMoveable = new ReadOnlyReactiveProperty<bool>(_isMoveable);
                 IsSelected = new ReadOnlyReactiveProperty<bool>(_isSelected);
                 Interactable = new ReadOnlyReactiveProperty<bool>(_interactable);
@@ -153,8 +151,8 @@ namespace Game.Entities
 
             public void Reset()
             {
-                _position.Value = InitialPosition.Value;
-                _scale.Value = InitialScale.Value;
+                _scale.SetValueAndForceNotify(InitialScale);
+                _position.SetValueAndForceNotify(InitialPosition);
                 _isMoveable.Value = true;
                 _isSelected.Value = false;
                 _interactable.Value = false;
@@ -162,15 +160,20 @@ namespace Game.Entities
                 _isVisible.Value = true;
             }
 
-
             public void Dispose()
             {
+                _position?.Dispose();
+                _scale?.Dispose();
                 _isMoveable?.Dispose();
                 _isSelected?.Dispose();
-                Position?.Dispose();
-                InitialPosition?.Dispose();
+                _interactable?.Dispose();
+                _isMoving?.Dispose();
+                _isVisible?.Dispose();
+                Visible?.Dispose();
                 IsMoveable?.Dispose();
                 IsSelected?.Dispose();
+                IsMoving?.Dispose();
+                Interactable?.Dispose();
             }
         }
         

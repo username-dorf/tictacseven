@@ -44,7 +44,7 @@ namespace Core.UI.Components
 
         public class Factory : IDisposable
         {
-            private AssetsProvider<MaterialApplicableView, int> _tileAssetsProvider;
+            private AssetsProvider<BaseEntityView, int> _tileAssetsProvider;
             private AssetProvider _viewAssetProvider;
             private SkinPreviewCamera.Factory _cameraFactory;
 

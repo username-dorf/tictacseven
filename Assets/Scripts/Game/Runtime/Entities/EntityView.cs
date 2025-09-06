@@ -1,5 +1,6 @@
-using System;
+using System.Threading;
 using Core.Common;
+using Cysharp.Threading.Tasks;
 using Game.Field;
 using UniRx;
 using UnityEngine;
@@ -7,23 +8,29 @@ using UnityEngine.InputSystem;
 
 namespace Game.Entities
 {
-    public class EntityView : MaterialApplicableView
+    public class EntityView : BaseEntityView
     {
         [field: SerializeField] public EntityDebugView DebugView { get; private set; }
         [SerializeField] private BoxCollider collider;
+        
         private float _maxRayDistance = 100f;
         private bool _enableScaleAnimation = true;
+        
+        private Vector3 _animationScale;
         private Vector3 _animationInitialScale;
         private Vector3 _animationInitialPosition;
         
         private EntityViewModel _viewModel;
         private FieldViewProvider _fieldViewProvider;
+        private Renderer _renderer;
 
 
         public void Initialize(EntityViewModel viewModel, FieldViewProvider fieldViewProvider)
         {
             _fieldViewProvider = fieldViewProvider;
             _viewModel = viewModel;
+            
+            viewModel.OnViewCreated(transform);
 
             viewModel.Value
                 .Subscribe(OnValueChanged)
@@ -38,7 +45,7 @@ namespace Game.Entities
                 .AddTo(this);
             
             viewModel.Material
-                .Subscribe(OnMaterialChanged)
+                .Subscribe(ChangeMaterial)
                 .AddTo(this);
 
             viewModel.ValueSprite
@@ -48,9 +55,12 @@ namespace Game.Entities
             viewModel.IsVisible
                 .Subscribe(OnVisibleChanged)
                 .AddTo(this);
-            
+
+            _animationScale = transform.localScale;
             _animationInitialScale = transform.localScale;
             _animationInitialPosition = transform.position;
+            
+            base.Initialize();
         }
 
         private void Update()
@@ -94,6 +104,8 @@ namespace Game.Entities
                 {
                     _viewModel.SetSelected(true);
                     _viewModel.SetMoving(true);
+                    ExecutePress();
+                    _animationScale = GetPressScale();
                 }
                 else
                 {
@@ -115,12 +127,19 @@ namespace Game.Entities
             {
                 _viewModel.SetSelected(false);
                 _viewModel.SetMoving(false);
+
+                BaseScale = _viewModel.Position.Value == _animationInitialPosition
+                    ? _animationInitialScale
+                    : _animationInitialScale * 1.25f;
+                
+                ExecuteRelease();
             }
         }
 
         private void OnScaleChanged(Vector3 scale)
         {
             transform.localScale = scale;
+            _animationScale = scale;
         }
 
         private void OnValueChanged(int value)
@@ -132,12 +151,9 @@ namespace Game.Entities
         {
             transform.position = position;
             if(_enableScaleAnimation)
-                DoScaleRelativeToPosition(position,_animationInitialPosition, _animationInitialScale);
+                DoScaleRelativeToPosition(position,_animationInitialPosition, _animationScale);
         }
-        private void OnMaterialChanged(Material material)
-        {
-            ChangeMaterial(material);
-        }
+
         public void ChangeValueOnMaterial(Sprite sprite)
         {
             var mpb = new MaterialPropertyBlock();
@@ -151,12 +167,23 @@ namespace Game.Entities
         }
 
         private void DoScaleRelativeToPosition(Vector3 position, Vector3 initPosition, Vector3 initScale,
-            float maxDistance = 3, float maxScale = 1.0f)
+            float maxDistance = 3, float maxScale = 1.25f)
         {
             position = new Vector3(position.x, 0, position.z);
             float d = Vector3.Distance(position,new Vector3(initPosition.x,0,initPosition.z));
             float t = (maxDistance > 0f) ? Mathf.Clamp01(d / maxDistance) : 1f;
-            transform.localScale=Vector3.Lerp(initScale, Vector3.one * maxScale, t);
+            var scale = Vector3.Lerp(initScale, initScale * maxScale, t);
+            transform.localScale = scale;
+            BaseScale = scale;
+        }
+
+        protected override UniTask GetOnReleaseAction(CancellationToken token)
+        {
+            if(transform.position == _animationInitialPosition)
+                return UniTask.CompletedTask;
+            
+            _viewModel.CallVFX(transform.position);
+            return UniTask.CompletedTask;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Game.Entities.VFX;
 using UniRx;
 using UnityEngine;
 
@@ -11,9 +12,9 @@ namespace Game.Entities
         public ReactiveProperty<Sprite> ValueSprite { get; }
         public ReadOnlyReactiveProperty<bool> IsMoving => 
             _model.Transform.IsMoving;
-        public ReadOnlyReactiveProperty<Vector3> Position => 
+        public IReadOnlyReactiveProperty<Vector3> Position => 
             _model.Transform.Position;
-        public ReadOnlyReactiveProperty<Vector3> Scale => 
+        public IReadOnlyReactiveProperty<Vector3> Scale => 
             _model.Transform.Scale;
         public ReadOnlyReactiveProperty<bool> IsVisible =>
             _model.Transform.Visible;
@@ -23,9 +24,15 @@ namespace Game.Entities
         
         private CompositeDisposable _disposable;
         private EntityModel _model;
+        private EntityPlacementFXPool _vfxPool;
 
-        public EntityViewModel(EntityModel model, Sprite valueSprite, Material material)
+        public EntityViewModel(
+            EntityModel model,
+            Sprite valueSprite,
+            Material material,
+            EntityPlacementFXPool vfxPool)
         {
+            _vfxPool = vfxPool;
             _model = model;
             _disposable = new CompositeDisposable();
             
@@ -63,6 +70,16 @@ namespace Game.Entities
                 return;
             
             _model.Transform.SetPosition(position);
+        }
+
+        public void OnViewCreated(Transform viewTransform)
+        {
+            _vfxPool?.Initialize(viewTransform);
+        }
+
+        public void CallVFX(Vector3 position)
+        {
+            _vfxPool.Play(position,null);
         }
 
         private bool CanBeMoved()

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3412660103778548502}
   - component: {fileID: 6823922263197065172}
   - component: {fileID: 2225098742623207511}
+  - component: {fileID: 6126886778967511473}
   m_Layer: 0
   m_Name: Entity_Base_tiled
   m_TagString: Untagged
@@ -46,6 +47,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96f983aa0ee2451799a1ff9d7ea007db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pressDuration: 0.18
+  pressAmount: 0.22
+  bounceBelow: 0.12
+  xzWiden: 0.08
+  releaseDuration: 0.22
+  reboundUp: 0.14
+  xzRelax: 0.06
+  minPressVisualTime: 0.06
+  anchor01: {x: 0.5, y: 0, z: 0.5}
+  afterExecuteCooldown: 0
   <Renderer>k__BackingField: {fileID: 6411265222804700016}
   <DebugView>k__BackingField: {fileID: 2225098742623207511}
   collider: {fileID: 3875036478918725494}
@@ -62,6 +73,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _drawValue: 0
+--- !u!114 &6126886778967511473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3148852301609381025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c2a426cba24778b6cc724812fae411, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: tictacseven.Game::Game.Entities.VFX.EntityPlacementFX
 --- !u!1001 &5688464087745802269
 PrefabInstance:
   m_ObjectHideFlags: 0
