@@ -86,7 +86,9 @@ namespace Core.UI.Components
         private void ChangeIdToRandom()
         {
             var id = Guid.NewGuid().ToString();
+            #if UNITY_EDITOR
             _userPreferencesProvider.Current.User.ChangeId(id);
+            #endif
         }
     }
 }
