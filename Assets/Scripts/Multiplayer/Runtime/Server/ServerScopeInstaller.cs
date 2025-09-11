@@ -1,7 +1,7 @@
-using Core.StateMachine;
 using Game.Field;
-using Multiplayer.Server.States;
+using UniState;
 using Zenject;
+using Multiplayer.Server.States;
 
 namespace Multiplayer.Server
 {
@@ -20,7 +20,10 @@ namespace Multiplayer.Server
             Container.BindFactory<ServerSubstateScope, ServerSubstateScope.Factory>()
                 .FromSubContainerResolve()
                 .ByMethod(InstallMatchSubcontainer)
-                .AsSingle();                          
+                .AsSingle();
+#if LAN_STATE_MACHINE_DEBUG
+            BindDebugContracts(Container);
+#endif
         }
 
         private void InstallMatchSubcontainer(DiContainer sub)
@@ -29,17 +32,28 @@ namespace Multiplayer.Server
             sub.BindInterfacesTo<ServerActiveClientProvider>().AsSingle();
             sub.BindInterfacesTo<ServerClientsProvider>().AsSingle();
 
-            sub.BindInterfacesAndSelfTo<StateFactory>().AsSingle();
-            sub.BindInterfacesAndSelfTo<StateMachine>().AsSingle();
+            sub.BindStateMachine<IStateMachine, ServerStateMachine>();
             
-            sub.InstallState<InitClientsSubstate>();
-            sub.InstallState<ClientTurnSubstate>();
-            sub.InstallState<FieldSyncSubstate>();
-            sub.InstallState<RoundResultSubstate>();
+            sub.BindState<InitializeClientsSubstate>();
+            sub.BindState<ClientTurnSubstate>();
+            sub.BindState<FieldSyncSubstate>();
+            sub.BindState<RoundResultSubstate>();
 
             sub.Bind<FieldModel>()
                 .AsSingle()
                 .WithArguments(FieldConfig.FIELD_ROWS, FieldConfig.FIELD_COLUMNS);
+            
+            sub.BindInterfacesTo<ServerRoundCounter>()
+                .AsSingle();
+        }
+        
+        private void BindDebugContracts(DiContainer container)
+        {
+            container.BindInterfacesTo<ServerStateProviderDebug>()
+                .AsSingle();
+            container.BindInterfacesTo<ServerStateMachineDebug>()
+                .AsSingle()
+                .NonLazy();
         }
     }
 }

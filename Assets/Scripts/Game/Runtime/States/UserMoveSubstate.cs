@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
 using UniRx;
-using UnityEngine;
+using UniState;
 using Zenject;
 
 namespace Game.States
@@ -12,43 +12,36 @@ namespace Game.States
     public class UserMoveSubstate : GameSubstate
     {
         
-        private readonly FieldModel _field;
-        private readonly UserEntitiesModel _userEntitiesModel;
-        private CompositeDisposable _disposable;
-        private UserRoundModel.Provider _userRoundModelProvider;
+        private readonly LazyInject<FieldModel> _field;
+        private readonly LazyInject<UserEntitiesModel> _userEntitiesModel;
+        private readonly LazyInject<UserRoundModel.Provider> _userRoundModelProvider;
 
         public UserMoveSubstate(
-            IGameSubstateResolver gameSubstateResolver,
-            FieldModel field,
-            [Inject(Id = UserModelConfig.ID)] UserEntitiesModel userEntitiesModel,
-            UserRoundModel.Provider userRoundModelProvider) : base(gameSubstateResolver)
+            LazyInject<FieldModel> field,
+            [Inject(Id = UserModelConfig.ID)] LazyInject<UserEntitiesModel> userEntitiesModel,
+            LazyInject<UserRoundModel.Provider> userRoundModelProvider)
         {
             _userRoundModelProvider = userRoundModelProvider;
-            _disposable = new CompositeDisposable();
             _userEntitiesModel = userEntitiesModel;
             _field = field;
         }
-        public override async UniTask EnterAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
-            _userEntitiesModel.SetInteractionAll(true);
-            _userRoundModelProvider.Model.SetAwaitingTurn(true);
-            _field.OnEntityChanged
-                .Subscribe(_=>SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct))
-                .AddTo(_disposable);
+            _userEntitiesModel.Value.SetInteractionAll(true);
+            _userRoundModelProvider.Value.Model.SetAwaitingTurn(true);
             
+            await _field.Value.OnEntityChanged
+                .First()
+                .ToUniTask(cancellationToken: token);
+
+            return Transition.GoTo<ValidateSubstate>();
         }
 
-        public override async UniTask ExitAsync(CancellationToken ct)
+        public override UniTask Exit(CancellationToken token)
         {
-            _disposable?.Clear();
-            _userEntitiesModel.SetInteractionAll(false);
-            _userRoundModelProvider.Model.SetAwaitingTurn(false);
-
-        }
-
-        public override void Dispose()
-        {
-            
+            _userEntitiesModel.Value.SetInteractionAll(false);
+            _userRoundModelProvider.Value.Model.SetAwaitingTurn(false);
+            return base.Exit(token);
         }
     }
 }

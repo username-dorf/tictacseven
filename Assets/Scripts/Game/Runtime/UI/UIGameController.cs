@@ -11,16 +11,16 @@ namespace Game.UI
 {
     public class UIGameController : UIController<UIGame>
     {
-        protected IStateMachine StateMachine;
         protected IWindowsController WindowsController;
+        protected ManualTransitionTrigger<MenuState> _menuTransitionTrigger;
 
         public UIGameController(
             UIProvider<UIGame> uiProvider,
-            IStateMachine stateMachine,
+            ManualTransitionTrigger<MenuState> menuTransitionTrigger,
             IWindowsController windowsController) : base(uiProvider)
         {
+            _menuTransitionTrigger = menuTransitionTrigger;
             WindowsController = windowsController;
-            StateMachine = stateMachine;
         }
         public override void Initialize()
         {
@@ -32,7 +32,7 @@ namespace Game.UI
         protected virtual void InitializeExitButton()
         {
             Provider.UI.ExitButton
-                .Initialize(()=>StateMachine.ChangeStateAsync<MenuState>(CancellationToken.None));
+                .Initialize(_menuTransitionTrigger.Continue);
         }
 
         protected virtual void InitializeSettingsButton()

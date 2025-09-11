@@ -35,7 +35,7 @@ namespace Multiplayer.UI.Components
                 this.nickname.text = nickname;
         }
 
-        public class ViewModel : IListItemViewModel
+        public new class ViewModel : IListItemViewModel
         {
             public ReactiveProperty<string> Nickname { get; }
             public ReactiveProperty<string> Ip { get; }

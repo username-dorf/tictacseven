@@ -1,3 +1,4 @@
+using UniState;
 using Zenject;
 
 namespace Core.StateMachine
@@ -6,11 +7,7 @@ namespace Core.StateMachine
     {
         public override void InstallBindings()
         {
-            Container.BindInterfacesTo<StateMachine>()
-                .AsSingle();
-            Container.Bind<StateFactory>()
-                .AsSingle();
-            
+            Container.BindStateMachine<IStateMachine, AppStateMachine>();
             StatesRegistration.Install(Container);
         }
     }

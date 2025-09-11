@@ -1,16 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using FishNet;
 using FishNet.Connection;
 using Game.Entities;
 using Game.Field;
-using Game.States;
 using Game.User;
 using Multiplayer.Connection;
 using Multiplayer.Contracts;
 using UniRx;
+using UniState;
 using UnityEngine;
 using Zenject;
 using Channel = FishNet.Transporting.Channel;
@@ -20,70 +21,81 @@ namespace Multiplayer.Server.States
 {
     public class FieldSyncSubstate : ServerSubstate<ClientTurnResponse>
     {
-        private FieldModel _fieldModel;
-        private IServerClientsProvider _clientsProvider;
-        private IServerActiveClientProvider _activeClientProvider;
+        private LazyInject<FieldModel> _fieldModel;
+        private LazyInject<IServerClientsProvider> _clientsProvider;
+        private LazyInject<IServerActiveClientProvider> _activeClientProvider;
+        private LazyInject<IServerRoundCounter> _roundCounter;
+
+        private LazyInject<IStateProviderDebug> _stateProviderDebug;
 
         private ReactiveProperty<int> _syncedClientsCount;
-        private readonly HashSet<int> _whoReplied;
-        private int _passedRounds;
-       
+        private HashSet<int> _whoReplied;
+
 
         public FieldSyncSubstate(
-            FieldModel fieldModel,
-            IServerClientsProvider clientsProvider,
-            IServerActiveClientProvider activeClientProvider,
-            IServerSubstateResolver substateResolverFactory) : base(substateResolverFactory)
+            LazyInject<FieldModel> fieldModel,
+            LazyInject<IServerClientsProvider> clientsProvider,
+            LazyInject<IServerActiveClientProvider> activeClientProvider,
+            [InjectOptional] LazyInject<IStateProviderDebug> stateProviderDebug,
+            LazyInject<IServerRoundCounter> roundCounter)
         {
-            _activeClientProvider = activeClientProvider;
+            _roundCounter = roundCounter;
+            _stateProviderDebug = stateProviderDebug;
             _whoReplied = new HashSet<int>();
             _syncedClientsCount = new ReactiveProperty<int>();
+            _activeClientProvider = activeClientProvider;
             _clientsProvider = clientsProvider;
             _fieldModel = fieldModel;
         }
 
-        protected override async UniTask EnterAsync(ClientTurnResponse payload, CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
+            _stateProviderDebug?.Value?.ChangeState(this);
+            AddDisposables();
+
             InstanceFinder.ServerManager.RegisterBroadcast<ClientFieldSyncResponse>(OnClientSynced);
 
-            UpdateEntitiesModel(payload.ClientId,payload.Merit);
-            var clientOwnerValue = _clientsProvider.GetClientOwnerValue(payload.ClientId);
-            OnClientTurn(clientOwnerValue, payload.Merit,payload.Coordinates);
+            UpdateEntitiesModel(Payload.ClientId, Payload.Merit);
+            var clientOwnerValue = _clientsProvider.Value.GetClientOwnerValue(Payload.ClientId);
+            OnClientTurn(clientOwnerValue, Payload.Merit, Payload.Coordinates);
+
             InstanceFinder.ServerManager.Broadcast(new ClientFieldSync()
             {
-                FieldModelState = _fieldModel.GetDataSnapshot(),
+                FieldModelState = _fieldModel.Value.GetDataSnapshot(),
             });
-            
+
             try
             {
                 await _syncedClientsCount
                     .Where(v => v >= ConnectionConfig.MAX_CLIENTS)
-                    .First()                            
-                    .ToUniTask(cancellationToken: ct); 
-                
-                await OnAllClientsSynced(ct);
+                    .First()
+                    .ToUniTask(cancellationToken: token);
+
+                return OnAllClientsSynced();
             }
             catch
             {
                 // ignored
             }
 
+            return Transition.GoToExit();
         }
-        
-        public override UniTask ExitAsync(CancellationToken ct)
+
+        public override UniTask Exit(CancellationToken token)
         {
             _syncedClientsCount.Value = 0;
             _whoReplied.Clear();
+
             InstanceFinder.ServerManager.UnregisterBroadcast<ClientFieldSyncResponse>(OnClientSynced);
-            return UniTask.CompletedTask;
+            return base.Exit(token);
         }
 
         private void OnClientTurn(int owner, int merit, Vector2Int coors)
         {
             var model = new EntityModel(merit, owner, Vector3.zero);
-            _fieldModel.UpdateEntity(coors, Vector3.zero, model);
+            _fieldModel.Value.UpdateEntity(coors, Vector3.zero, model);
         }
-        
+
         private void OnClientSynced(NetworkConnection connection, ClientFieldSyncResponse response, Channel arg3)
         {
             if (_whoReplied.Add(connection.ClientId))
@@ -92,29 +104,26 @@ namespace Multiplayer.Server.States
             }
         }
 
-        private async UniTask OnAllClientsSynced(CancellationToken ct)
+        private StateTransitionInfo OnAllClientsSynced()
         {
-            Debug.Log("All clients synced");
-            _activeClientProvider.ChangeActiveClientId();
+            _activeClientProvider.Value.ChangeActiveClientId();
             var hasWinners = HasWinner(out var winners);
             if (hasWinners)
             {
-                var payload = new RoundResultSubstate.Payload
+                var payload = new RoundResultSubstate.PayloadModel
                 {
-                    PassedRounds = _passedRounds,
+                    PassedRounds = _roundCounter.Value.PassedRounds.Value,
                     WinnerIds = winners,
                 };
-                await SubstateMachine.ChangeStateAsync<RoundResultSubstate,RoundResultSubstate.Payload>(payload, 
-                    CancellationToken.None);
-                return;
-
+                return Transition.GoTo<RoundResultSubstate, RoundResultSubstate.PayloadModel>(payload);
             }
-            await SubstateMachine.ChangeStateAsync<ClientTurnSubstate>(CancellationToken.None);
+
+            return Transition.GoTo<ClientTurnSubstate>();
         }
 
         private void UpdateEntitiesModel(string clientId, int merit)
         {
-            var model = _clientsProvider.ClientEntitiesModels[clientId];
+            var model = _clientsProvider.Value.ClientEntitiesModels[clientId];
             var placed = model.Entities.First(x => x.Data.Merit.Value == merit);
             model.Entities.Remove(placed);
         }
@@ -126,37 +135,42 @@ namespace Multiplayer.Server.States
                 if (value.Owner == owner)
                     return key;
             }
+
             return string.Empty;
         }
-        
+
         private bool HasWinner(out List<string> winners)
         {
             winners = new List<string>();
-            var winnerOwner = _fieldModel.GetWinner();
+            var winnerOwner = _fieldModel.Value.GetWinner();
             if (winnerOwner.HasValue)
             {
-                _passedRounds++;
+                _roundCounter.Value.IncrementPassedRound();
 
-                var winnerId = GetClientId(winnerOwner.Value, _clientsProvider.ClientEntitiesModels);
+                var winnerId = GetClientId(winnerOwner.Value, _clientsProvider.Value.ClientEntitiesModels);
                 winners.Add(winnerId);
                 return true;
             }
-            
-            var activeUserEntitiesModel = _clientsProvider.ClientEntitiesModels[_activeClientProvider.ActiveClientId.Value];
-            var isDraw = _fieldModel.IsDraw(activeUserEntitiesModel);
+
+            var activeUserEntitiesModel =
+                _clientsProvider.Value.ClientEntitiesModels[_activeClientProvider.Value.ActiveClientId.Value];
+            var isDraw = _fieldModel.Value.IsDraw(activeUserEntitiesModel);
             if (isDraw)
             {
-                _passedRounds++;
-                winners.AddRange(_clientsProvider.ClientEntitiesModels.Keys);
+                _roundCounter.Value.IncrementPassedRound();
+
+                winners.AddRange(_clientsProvider.Value.ClientEntitiesModels.Keys);
                 return true;
             }
 
             return false;
         }
 
-        public override void Dispose()
+        private void AddDisposables()
         {
-            InstanceFinder.ServerManager.UnregisterBroadcast<ClientFieldSyncResponse>(OnClientSynced);
+            Disposables.Add(() =>
+                InstanceFinder.ServerManager.UnregisterBroadcast<ClientFieldSyncResponse>(OnClientSynced));
+            _syncedClientsCount.AddTo(Disposables);
         }
     }
 }

@@ -2,31 +2,34 @@ using Core.StateMachine;
 using Core.UI.Components;
 using Core.UI.Windows;
 using Core.User;
+using Cysharp.Threading.Tasks;
 using FishNet;
 using Game.UI;
+using Multiplayer.Client;
 using Multiplayer.Contracts;
+using Zenject;
 
 namespace Multiplayer.UI
 {
     public class UIMultiplayerController : UIGameController
     {
-        private IUserPreferencesProvider _userPreferencesProvider;
+        private LazyInject<ISessionExitClient> _sessionExitClient;
 
         public UIMultiplayerController(
             UIProvider<UIGame> uiProvider,
-            IStateMachine stateMachine,
-            IUserPreferencesProvider userPreferencesProvider,
-            IWindowsController windowsController)
-            : base(uiProvider, stateMachine, windowsController)
+            ManualTransitionTrigger<MenuState> menuTransitionTrigger,
+            IWindowsController windowsController,
+            LazyInject<ISessionExitClient> sessionExitClient)
+            : base(uiProvider, menuTransitionTrigger, windowsController)
         {
-            _userPreferencesProvider = userPreferencesProvider;
+            _sessionExitClient = sessionExitClient;
         }
 
         protected override void InitializeExitButton()
         {
-            var clientId = _userPreferencesProvider.Current.User.Id;
             Provider.UI.ExitButton
-                .Initialize(()=>InstanceFinder.ClientManager.Broadcast(new ClientLeaveSessionNotice(){ClientId = clientId}));
+                .Initialize(()=>_sessionExitClient.Value.LeaveByUserAsync().Forget());
         }
+        
     }
 }

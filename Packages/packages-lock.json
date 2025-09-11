@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.bazyleu.unistate": {
+      "version": "https://github.com/bazyleu/UniState.git?path=Assets/UniState",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "1dd7cb994d477420f09231a83afe355111b86019"
+    },
     "com.cysharp.unitask": {
       "version": "2.5.5",
       "depth": 0,

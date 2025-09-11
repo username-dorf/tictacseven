@@ -1,29 +1,15 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UniState;
+
 
 namespace Core.StateMachine
 {
-    public class BootstrapState : IState
+    public class BootstrapState : StateBase
     {
-        private IStateMachine _stateMachine;
-
-        public BootstrapState(IStateMachine stateMachine)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
-            _stateMachine = stateMachine;
-        }
-        
-        public async UniTask EnterAsync(CancellationToken ct)
-        {
-            await _stateMachine.ChangeStateAsync<PersistantResourcesLoadState>(ct);
-        }
-
-        public async UniTask ExitAsync(CancellationToken ct)
-        {
-        }
-
-        public void Dispose()
-        {
-            // TODO release managed resources here
+            return Transition.GoTo<PersistantResourcesLoadState>();
         }
     }
 }

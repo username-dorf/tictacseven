@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Core.StateMachine;
 using Core.UI;
 using Core.UI.Components;
 using Cysharp.Threading.Tasks;
@@ -26,7 +27,7 @@ public class MenuMonoInstaller : MonoInstaller<MenuMonoInstaller>
 
     public void BindMenuComponents(DiContainer container)
     {
-        container.BindFactory<Func<CancellationToken, UniTask>, ModeButtonViewModel, ModeButtonViewModel.Factory>()
+        container.Bind<ModeButtonViewModel.Factory>()
             .AsSingle();
         container.BindInterfacesAndSelfTo<MenuFieldViewFactory>()
             .AsSingle();
@@ -36,4 +37,6 @@ public class MenuMonoInstaller : MonoInstaller<MenuMonoInstaller>
         container.BindInterfacesTo<MenuBootstrap>()
             .AsSingle();
     }
+
+   
 }

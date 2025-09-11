@@ -6,6 +6,7 @@ using Game.Entities;
 using Game.Field;
 using Game.UI;
 using Game.User;
+using UniState;
 using UnityEngine;
 
 namespace Game.States
@@ -27,7 +28,6 @@ namespace Game.States
 
         public InitialSubstate(
             IGameSubstatesInstaller gameSubstatesInstaller,
-            IGameSubstateResolver substateResolverFactory,
             FieldViewFactory fieldViewFactory,
             FieldGridFactory fieldGridFactory,
             EntitiesBackgroundFactory entitiesBackgroundFactory,
@@ -36,7 +36,7 @@ namespace Game.States
             AIUserRoundModel.Provider opponentModelProvider,
             UserRoundModel.Provider userModelProvider,
             UIRoundResultView.Factory uiRoundResultFactory,
-            UIProvider<UIGame> uiProvider) : base(substateResolverFactory)
+            UIProvider<UIGame> uiProvider)
         {
             _uiProvider = uiProvider;
             _uiRoundResultFactory = uiRoundResultFactory;
@@ -50,9 +50,8 @@ namespace Game.States
             _fieldViewFactory = fieldViewFactory;
         }
 
-        public override async UniTask EnterAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
-            Debug.Log("Enter async initial state");
             var opponent = _opponentModelProvider.Model;
             var user = _userModelProvider.Model;
             
@@ -60,35 +59,35 @@ namespace Game.States
             var userRoundResultViewModel = _uiRoundResultFactory.BindExisting(user, roundResultsViews[0]);
             var aiOpponentRoundResultViewModel = _uiRoundResultFactory.BindExisting(opponent, roundResultsViews[1]);
 
-            var fieldView = await _fieldViewFactory.CreateAsync(ct);
-            await fieldView.PlaySquareBounceAllAxes(ct);
+            var fieldView = await _fieldViewFactory.CreateAsync(token);
+            await fieldView.PlaySquareBounceAllAxes(token);
             var fieldGrid =
                 _fieldGridFactory.Create(fieldView.Collider, FieldConfig.FIELD_ROWS, FieldConfig.FIELD_COLUMNS);
             fieldView.DebugView.SetPoints(fieldGrid);
 
-            var entitiesBackgroundView = await _entitiesBackgroundFactory.CreateAsync(ct);
+            var entitiesBackgroundView = await _entitiesBackgroundFactory.CreateAsync(token);
             var entitiesPositions = _entitiesBackgroundGridFactory.CreateOnRect(entitiesBackgroundView.Collider);
             
             Func<UniTask> userEntitiesBackgroundViewAnimation = ()=> 
-                entitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 1),ct);
+                entitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 1),token);
 
             Func<UniTask<UserEntitiesModel>> userEntitiesModelCreation = ()=>
-                _entityFactory.CreateAll(entitiesPositions, user.Owner, user.MaterialId, ct);
+                _entityFactory.CreateAll(entitiesPositions, user.Owner, user.MaterialId, token);
            
 
             EntityPlacedModel[] prespawnPreset = null; //FieldConfig.CREATE_PRESPAWN_PRESET_1(opponentOwner);
 
             var opponentEntitiesBackgroundView =
-                await _entitiesBackgroundFactory.CreateOpponentAsync(ct);
+                await _entitiesBackgroundFactory.CreateOpponentAsync(token);
             var opponentEntitiesPositions =
                 _entitiesBackgroundGridFactory.CreateOnRect(opponentEntitiesBackgroundView.Collider, true);
             
             Func<UniTask> opponentEntitiesBackgroundViewAnimation = ()=> 
-                opponentEntitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 0),ct);
+                opponentEntitiesBackgroundView.PlayScaleFromCorner(new Vector2Int(1, 0),token);
 
             Func<UniTask<UserEntitiesModel>> opponentEntitiesModelCreation = ()=>
                  _entityFactory.CreateAll(opponentEntitiesPositions, opponent.Owner, opponent.MaterialId, prespawnPreset,
-                    fieldGrid, ct);
+                    fieldGrid, token);
             
             await UniTask.WhenAll(userEntitiesBackgroundViewAnimation(), opponentEntitiesBackgroundViewAnimation());
             
@@ -97,10 +96,10 @@ namespace Game.States
             opponentEntitiesModel.SetInteractionAll(false);
             
             var userEntitiesPlaceholder =
-                await _entitiesBackgroundFactory.CreatePlaceholdersAsync(userEntitiesModel, ct);
+                await _entitiesBackgroundFactory.CreatePlaceholdersAsync(userEntitiesModel, token);
             
             var opponentEntitiesPlaceholder =
-                await _entitiesBackgroundFactory.CreatePlaceholdersAsync(opponentEntitiesModel, ct);
+                await _entitiesBackgroundFactory.CreatePlaceholdersAsync(opponentEntitiesModel, token);
             
             
 
@@ -117,16 +116,7 @@ namespace Game.States
                 .BindUserRoundModel(user, UserModelConfig.ID)
                 .Build();
             
-            await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
-        }
-
-        public override async UniTask ExitAsync(CancellationToken ct)
-        {
-        }
-
-        public override void Dispose()
-        {
-            
+            return Transition.GoTo<ValidateSubstate>();
         }
     }
 }

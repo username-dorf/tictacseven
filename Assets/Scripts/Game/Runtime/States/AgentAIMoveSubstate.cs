@@ -1,9 +1,8 @@
 using System.Threading;
-using Core.Data;
-using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
+using UniState;
 using UnityEngine;
 using Zenject;
 
@@ -11,32 +10,31 @@ namespace Game.States
 {
     public class AgentAIMoveSubstate : GameSubstate
     {
-        private FieldModel _fieldModel;
-        private UserEntitiesModel _botEntitiesModel;
+        private LazyInject<FieldModel> _fieldModel;
+        private LazyInject<UserEntitiesModel> _botEntitiesModel;
         private UserEntitiesController _controller;
-        private UserEntitiesModel _userEntitiesModel;
+        private LazyInject<UserEntitiesModel> _userEntitiesModel;
         private AgentAIController _agentAIController;
         private AgentThinkingAIController _agentThinkingAIController;
-        private AIUserRoundModel _userRoundModel;
+        private FieldViewProvider _fieldViewProvider;
+        private LazyInject<AIUserRoundModel.Provider> _userRoundModelProvider;
 
         public AgentAIMoveSubstate(
-            FieldModel fieldModel,
+            LazyInject<FieldModel> fieldModel,
             FieldViewProvider fieldViewProvider,
-            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserEntitiesModel botEntitiesModel,
-            [Inject(Id = UserModelConfig.ID)]
-            UserEntitiesModel userEntitiesModel,
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] LazyInject<UserEntitiesModel> botEntitiesModel,
+            [Inject(Id = UserModelConfig.ID)] LazyInject<UserEntitiesModel> userEntitiesModel,
             AgentAIController agentAIController,
             AgentThinkingAIController agentThinkingAIController,
-            IGameSubstateResolver gameSubstateResolver,
-            AIUserRoundModel.Provider userRoundModelProvider) : base(gameSubstateResolver)
+            LazyInject<AIUserRoundModel.Provider> userRoundModelProvider)
         {
-            _userRoundModel = userRoundModelProvider.Model;
+            _userRoundModelProvider = userRoundModelProvider;
+            _fieldViewProvider = fieldViewProvider;
             _agentThinkingAIController = agentThinkingAIController;
             _agentAIController = agentAIController;
             _userEntitiesModel = userEntitiesModel;
             _botEntitiesModel = botEntitiesModel;
             _fieldModel = fieldModel;
-            _controller = new UserEntitiesController(_fieldModel, _botEntitiesModel, fieldViewProvider);
         }
 
         public async UniTask EnterAsync_DISABLED(CancellationToken ct)
@@ -50,9 +48,9 @@ namespace Game.States
 
             int unityPlayer = 1;
             var azState = AzState.FromUnity(
-                _fieldModel,
-                _botEntitiesModel,
-                _userEntitiesModel,
+                _fieldModel.Value,
+                _botEntitiesModel.Value,
+                _userEntitiesModel.Value,
                 unityPlayer
             );
 
@@ -61,39 +59,36 @@ namespace Game.States
             await _controller.DoMoveAsync(v, new Vector2Int(row, col), ct);
         }
 
-        public override async UniTask EnterAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
+            _controller ??= new UserEntitiesController(_fieldModel.Value, _botEntitiesModel.Value, _fieldViewProvider);
+
 
             if (!_agentAIController.IsInitialized)
             {
-                await _agentAIController.InitializeAsync(ct);
+                await _agentAIController.InitializeAsync(token);
                 _agentAIController.StartNewGame();
             }
-            _userRoundModel.SetAwaitingTurn(true);
+            _userRoundModelProvider.Value.Model.SetAwaitingTurn(true);
             var (v, row, col) = _agentAIController.ChooseActionVRC(
-                _fieldModel,
-                _botEntitiesModel,
-                _userEntitiesModel,
-                _userRoundModel.Owner,
-                _userRoundModel.Difficulty);
+                _fieldModel.Value,
+                _botEntitiesModel.Value,
+                _userEntitiesModel.Value,
+                _userRoundModelProvider.Value.Model.Owner,
+                _userRoundModelProvider.Value.Model.Difficulty);
 
             await _controller.DoMoveAsync(
                 v,
                 new Vector2Int(row, col),
-                ct);
-            await SubstateMachine.ChangeStateAsync<ValidateSubstate>(ct);
+                token);
+            return Transition.GoTo<ValidateSubstate>();
         }
 
 
-        public override UniTask ExitAsync(CancellationToken ct)
+        public override UniTask Exit(CancellationToken token)
         {
-            _userRoundModel.SetAwaitingTurn(false);
-            return UniTask.CompletedTask;
-        }
-
-        public override void Dispose()
-        {
-            
+            _userRoundModelProvider.Value.Model.SetAwaitingTurn(false);
+            return base.Exit(token);
         }
     }
 }

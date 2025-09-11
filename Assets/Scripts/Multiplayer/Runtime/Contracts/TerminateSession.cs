@@ -13,6 +13,7 @@ namespace Multiplayer.Contracts
 
     public class TerminateSessionReason
     {
-        public const string CLIENT_LEAVE = "client leave game";
+        public const string OPPONENT_LEAVE = "opponent leave game";
+        public const string HOST_DISCONNECT = "host disconnected";
     }
 }

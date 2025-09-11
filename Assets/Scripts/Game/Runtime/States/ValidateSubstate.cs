@@ -2,6 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Field;
 using Game.User;
+using UniState;
 using Zenject;
 
 namespace Game.States
@@ -9,84 +10,60 @@ namespace Game.States
     public class ValidateSubstate : GameSubstate
     {
         private int _passedRounds;
-        private IActiveUserProvider _activeUserProvider;
-        private FieldModel _fieldModel;
-        private UserEntitiesModel _userEntitiesModel;
-        private UserEntitiesModel _botEntitiesModel;
+        private LazyInject<IActiveUserProvider> _activeUserProvider;
+        private LazyInject<FieldModel> _fieldModel;
+        private LazyInject<UserEntitiesModel> _userEntitiesModel;
+        private LazyInject<UserEntitiesModel> _botEntitiesModel;
 
 
         public ValidateSubstate(
-            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserEntitiesModel botEntitiesModel,
-            [Inject(Id = UserModelConfig.ID)] UserEntitiesModel userEntitiesModel,
-            IGameSubstateResolver gameSubstateResolver,
-            IActiveUserProvider activeUserProvider,
-            FieldModel fieldModel) 
-            : base(gameSubstateResolver)
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] LazyInject<UserEntitiesModel> botEntitiesModel,
+            [Inject(Id = UserModelConfig.ID)] LazyInject<UserEntitiesModel> userEntitiesModel,
+            LazyInject<IActiveUserProvider> activeUserProvider,
+            LazyInject<FieldModel> fieldModel)
         {
             _botEntitiesModel = botEntitiesModel;
             _userEntitiesModel = userEntitiesModel;
             _fieldModel = fieldModel;
             _activeUserProvider = activeUserProvider;
         }
-        public override async UniTask EnterAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken ct)
         {
             await UniTask.WaitForEndOfFrame(ct);
             
-            var winner = _fieldModel.GetWinner();
+            var winner = _fieldModel.Value.GetWinner();
             if (winner.HasValue)
             {
                 _passedRounds++;
                 if (_passedRounds >= FieldConfig.ROUNDS_AMOUNT)
                 {
-                    await SubstateMachine.ChangeStateAsync<FinalRoundResultSubstateGameSubstate, FinalRoundResultSubstateGameSubstate.Payload>(
-                        new FinalRoundResultSubstateGameSubstate.Payload(winner.Value),ct);
-                    return;
+                    return Transition.GoTo<FinalRoundResultSubstateGameSubstate, FinalRoundResultSubstateGameSubstate.PayloadModel>(
+                        new FinalRoundResultSubstateGameSubstate.PayloadModel(winner.Value));
                 }
-                await SubstateMachine.ChangeStateAsync<RoundResultSubstate, RoundResultSubstate.Payload>(
-                    new RoundResultSubstate.Payload(winner.Value),ct);
-                return;
+                return Transition.GoTo<RoundResultSubstate, RoundResultSubstate.PayloadModel>(
+                    new RoundResultSubstate.PayloadModel(winner.Value));
             }
             
-            _activeUserProvider.ChangeNextUser();
+            _activeUserProvider.Value.ChangeNextUser();
             
-            var activeUser = _activeUserProvider.GetActiveUserId();
+            var activeUser = _activeUserProvider.Value.GetActiveUserId();
             var activeUserEntitiesModel =
-                _userEntitiesModel.Owner == activeUser ? _userEntitiesModel : _botEntitiesModel;
-            var isDraw = _fieldModel.IsDraw(activeUserEntitiesModel);
+                _userEntitiesModel.Value.Owner == activeUser ? _userEntitiesModel : _botEntitiesModel;
+            var isDraw = _fieldModel.Value.IsDraw(activeUserEntitiesModel.Value);
             if (isDraw)
             {
                 _passedRounds++;
                 if (_passedRounds >= FieldConfig.ROUNDS_AMOUNT)
                 {
-                    await SubstateMachine.ChangeStateAsync<FinalRoundResultSubstateGameSubstate, FinalRoundResultSubstateGameSubstate.Payload>(
-                        new FinalRoundResultSubstateGameSubstate.Payload(_userEntitiesModel.Owner,_botEntitiesModel.Owner),ct);
-                    return;
+                    return Transition.GoTo<FinalRoundResultSubstateGameSubstate, FinalRoundResultSubstateGameSubstate.PayloadModel>(
+                        new FinalRoundResultSubstateGameSubstate.PayloadModel(_userEntitiesModel.Value.Owner,_botEntitiesModel.Value.Owner));
                 }
-                await SubstateMachine.ChangeStateAsync<RoundResultSubstate, RoundResultSubstate.Payload>(
-                    new RoundResultSubstate.Payload(_userEntitiesModel.Owner,_botEntitiesModel.Owner),ct);
-                return;
+                return Transition.GoTo<RoundResultSubstate, RoundResultSubstate.PayloadModel>(
+                    new RoundResultSubstate.PayloadModel(_userEntitiesModel.Value.Owner,_botEntitiesModel.Value.Owner));
             }
             
-            var activeUserId = _activeUserProvider.GetActiveUserId();
-            if (activeUserId==2)
-            {
-                await SubstateMachine.ChangeStateAsync<UserMoveSubstate>(ct);
-            }
-            else
-            {
-                await SubstateMachine.ChangeStateAsync<AgentAIMoveSubstate>(ct);
-            }
-        }
-
-        public override UniTask ExitAsync(CancellationToken ct)
-        {
-            // No specific exit logic needed for validation
-            return UniTask.CompletedTask;
-        }
-
-        public override void Dispose()
-        {
-            
+            var activeUserId = _activeUserProvider.Value.GetActiveUserId();
+            return activeUserId==2 ? Transition.GoTo<UserMoveSubstate>() : Transition.GoTo<AgentAIMoveSubstate>();
         }
     }
 }

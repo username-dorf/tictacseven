@@ -1,9 +1,13 @@
 using System;
 using System.Threading;
+using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using FishNet;
 using FishNet.Connection;
 using Multiplayer.Contracts;
+using UniRx;
+using UniState;
+using Zenject;
 using Channel = FishNet.Transporting.Channel;
 
 namespace Multiplayer.Server.States
@@ -11,57 +15,82 @@ namespace Multiplayer.Server.States
     public class ClientTurnSubstate : ServerSubstate
     {
         private const int TIMEOUT_SECONDS = 30;
+        
+        private IServerActiveClientProvider _activeClientProvider;
+        private LazyInject<IStateProviderDebug> _stateProviderDebug;
 
-        private CancellationTokenSource _lifetimeCts;
-        private CancellationTokenSource _turnCts;
-        private bool _disposed;
+        private ReactiveCommand<ClientTurnResponse> _turnDoneResponseReceived;
 
-        private readonly IServerActiveClientProvider _activeClientProvider;
 
         public ClientTurnSubstate(
             IServerActiveClientProvider activeClientProvider,
-            IServerSubstateResolver substateResolverFactory)
-            : base(substateResolverFactory)
+            [InjectOptional] LazyInject<IStateProviderDebug> stateProviderDebug)
         {
+            _stateProviderDebug = stateProviderDebug;
             _activeClientProvider = activeClientProvider;
+            _turnDoneResponseReceived = new ReactiveCommand<ClientTurnResponse>();
         }
 
-        public override UniTask EnterAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
-            _lifetimeCts?.Cancel();
-            _lifetimeCts?.Dispose();
-            _lifetimeCts = new CancellationTokenSource();
+            _stateProviderDebug?.Value?.ChangeState(this);
+            AddDisposables();
 
             InstanceFinder.ServerManager.RegisterBroadcast<ClientTurnResponse>(OnClientTurnDone);
 
-            var activeClientId = _activeClientProvider.ActiveClientId.Value;
-            StartTurn(activeClientId, TIMEOUT_SECONDS);
+            var clientId = _activeClientProvider.ActiveClientId.Value;
+            StartTurn(clientId, TIMEOUT_SECONDS);
 
-            return UniTask.CompletedTask;
+
+            using var raceCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var timeOutTask = WaitTurnTimeOutAsync(clientId, raceCts.Token);
+            var turnDoneTask = WaitTurnDoneAsync(raceCts.Token);
+
+            var (i, timeoutResult, turnDoneResult) = await UniTask.WhenAny(timeOutTask, turnDoneTask);
+
+            raceCts.Cancel();
+
+            return i switch
+            {
+                0 => timeoutResult,
+                1 => turnDoneResult,
+                _ => Transition.GoToExit()
+            };
         }
 
-        public override UniTask ExitAsync(CancellationToken ct)
+        public async UniTask<StateTransitionInfo> WaitTurnTimeOutAsync(
+            string clientId,
+            CancellationToken token)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(TIMEOUT_SECONDS),
+                DelayType.Realtime, PlayerLoopTiming.Update, token);
+            return OnTurnTimeout(clientId);
+        }
+
+        public async UniTask<StateTransitionInfo> WaitTurnDoneAsync(
+            CancellationToken token)
+        {
+            var result = await _turnDoneResponseReceived
+                .First()
+                .ToUniTask(cancellationToken: token);
+            return Transition.GoTo<FieldSyncSubstate, ClientTurnResponse>(result);
+        }
+
+        public override UniTask Exit(CancellationToken token)
         {
             InstanceFinder.ServerManager.UnregisterBroadcast<ClientTurnResponse>(OnClientTurnDone);
+            return base.Exit(token);
+        }
 
-            CancelAndDisposeTurn();
-            _lifetimeCts?.Cancel();
-            _lifetimeCts?.Dispose();
-            _lifetimeCts = null;
-
-            return UniTask.CompletedTask;
+        private StateTransitionInfo OnTurnTimeout(string clientId)
+        {
+            InstanceFinder.ServerManager.Broadcast(new ClientTurnTimeout {OffenderClientId = clientId});
+            _activeClientProvider.ChangeActiveClientId();
+            return Transition.GoTo<ClientTurnSubstate>();
         }
 
         private void StartTurn(string clientId, int timeoutSeconds)
         {
-            if (_disposed || _lifetimeCts == null || _lifetimeCts.IsCancellationRequested)
-                return;
-
-            CancelAndDisposeTurn();
-
-            _turnCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
-            var token = _turnCts.Token;
-
             var now = ServerClock.NowTicks();
             var deadline = ServerClock.AddSeconds(now, timeoutSeconds);
 
@@ -72,72 +101,18 @@ namespace Multiplayer.Server.States
                 DeadlineTicks = deadline,
                 ClockFrequency = ServerClock.Frequency
             });
-
-            TurnTimeoutLoopAsync(clientId, timeoutSeconds, token)
-                .Forget();
-        }
-
-        private async UniTask TurnTimeoutLoopAsync(string clientId, int timeoutSeconds, CancellationToken token)
-        {
-            try
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(timeoutSeconds),
-                    DelayType.Realtime, PlayerLoopTiming.Update, token);
-
-                if (token.IsCancellationRequested || _disposed) return;
-
-                InstanceFinder.ServerManager.Broadcast(new ClientTurnTimeout {OffenderClientId = clientId});
-
-                OnClientTimeout();
-                StartTurn(_activeClientProvider.ActiveClientId.Value, TIMEOUT_SECONDS);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-        }
-
-        private void OnClientTimeout()
-        {
-            _activeClientProvider.ChangeActiveClientId();
         }
 
         private void OnClientTurnDone(NetworkConnection conn, ClientTurnResponse response, Channel channel)
         {
-            CancelAndDisposeTurn();
-
-            SubstateMachine.ChangeStateAsync<FieldSyncSubstate, ClientTurnResponse>(response, CancellationToken.None)
-                .Forget();
+            _turnDoneResponseReceived?.Execute(response);
         }
 
-        private void CancelAndDisposeTurn()
+        private void AddDisposables()
         {
-            var cts = _turnCts;
-            _turnCts = null;
-            if (cts == null) return;
-
-            try
-            {
-                if (!cts.IsCancellationRequested) cts.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-
-            cts.Dispose();
-        }
-
-        public override void Dispose()
-        {
-            InstanceFinder.ServerManager.UnregisterBroadcast<ClientTurnResponse>(OnClientTurnDone);
-
-            _disposed = true;
-            CancelAndDisposeTurn();
-            _lifetimeCts?.Cancel();
-            _lifetimeCts?.Dispose();
-            _lifetimeCts = null;
+            _turnDoneResponseReceived.AddTo(Disposables);
+            Disposables.Add(() =>
+                InstanceFinder.ServerManager.UnregisterBroadcast<ClientTurnResponse>(OnClientTurnDone));
         }
     }
 }

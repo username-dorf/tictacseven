@@ -44,7 +44,9 @@ namespace Game.Field
         {
             try
             {
-                await meshTransform.ScaleBounceAllAxes().ToUniTask(cancellationToken:ct);
+                var sequence = meshTransform.ScaleBounceAllAxes();
+                await using var reg = ct.Register(() => sequence.Stop());
+                await sequence;
             }
             catch (OperationCanceledException)
             {

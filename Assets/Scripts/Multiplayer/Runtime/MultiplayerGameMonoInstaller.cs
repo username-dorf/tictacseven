@@ -1,18 +1,9 @@
-using Core.StateMachine;
-using Core.UI.Components;
 using Game.Entities;
 using Game.Field;
-using Game.States;
-using Game.UI;
 using Game.User;
 using Multiplayer.Client;
-using Multiplayer.Client.States;
 using Multiplayer.UI;
-using UnityEngine;
 using Zenject;
-using InitialSubstate = Multiplayer.Client.States.InitialSubstate;
-using RoundClearSubstate = Multiplayer.Client.States.RoundClearSubstate;
-using RoundResultSubstate = Multiplayer.Client.States.RoundResultSubstate;
 
 namespace Multiplayer
 {
@@ -22,15 +13,11 @@ namespace Multiplayer
         {
             FieldInstaller.Install(Container);
             EntitiesInstaller.Install(Container);
-
-            Container.Bind(typeof(IGameSubstatesInstaller), typeof(IGameSubstateResolver))
+            
+            Container.Bind(typeof(Game.States.IGameSubstatesInstaller), typeof(Game.States.IGameSubstateResolver))
                 .FromSubContainerResolve()
                 .ByNewGameObjectMethod(InstallSubcontainer)
                 .AsSingle();
-
-            Container.BindInterfacesTo<GameUIService>()
-                .AsSingle();
-            
             
             Container.BindFactory<UserRoundModel,UserRoundModel.Factory>()
                 .AsSingle();
@@ -39,25 +26,25 @@ namespace Multiplayer
             
             Container.BindInterfacesTo<UIMultiplayerController>()
                 .AsSingle();
+            
+            Container.BindInterfacesTo<ClientSubstateController>()
+                .AsSingle()
+                .NonLazy();
+            
+#if LAN_STATE_MACHINE_DEBUG
+            BindDebugContracts(Container);
+#endif
         }
-        void InstallSubcontainer(DiContainer sub)
+        private void InstallSubcontainer(DiContainer container)
         {
-            sub.BindInterfacesAndSelfTo<StateFactory>()
-                .AsSingle();
-            
-            sub.BindInterfacesTo<StateMachine>()
-                .AsSingle();
-            
-            sub.InstallState<InitialSubstate>();
-            sub.InstallState<TurnSubstate>();
-            sub.InstallState<ServerSyncSubstate>();
-            sub.InstallState<RoundResultSubstate>();
-            sub.InstallState<RoundClearSubstate>();
+            new ClientStateMachineInstaller().Install(container);
+        }
 
-            sub.BindInterfacesTo<GameSubstatesFacade>()
+        private void BindDebugContracts(DiContainer container)
+        {
+            container.BindInterfacesTo<ClientStateProviderDebug>()
                 .AsSingle();
-
-            sub.BindInterfacesTo<ClientSubstateController>()
+            container.BindInterfacesTo<ClientStateMachineDebug>()
                 .AsSingle()
                 .NonLazy();
         }

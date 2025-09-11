@@ -1,5 +1,7 @@
 using System;
 using Zenject;
+using UniState;
+
 
 namespace Core.StateMachine
 {
@@ -8,32 +10,25 @@ namespace Core.StateMachine
         public override void InstallBindings()
         {
             BindStates();
+            BindStateTriggers();
         }
         private void BindStates()
         {
-            Container.InstallState<BootstrapState>();
-            Container.InstallState<PersistantResourcesLoadState>();
-            Container.InstallState<MenuState>();
-            Container.InstallState<GameState>();
-            Container.InstallState<MultiplayerGameState>();
+            Container.BindState<BootstrapState>();
+            Container.BindState<PersistantResourcesLoadState>();
+            Container.BindState<MenuState>();
+            Container.BindState<GameState>();
+            Container.BindState<MultiplayerGameState>();
         }
-    }
-
-    public static class StatesRegistrationExtensions
-    {
-        public static void InstallState<TState>(this DiContainer diContainer) where TState : IState
+        public void BindStateTriggers()
         {
-            diContainer.Bind<IState>()
-                .WithId(typeof(TState).Name)
-                .To<TState>()
-                .AsSingle()
-                .OnInstantiated<TState>((ctx, state) =>
-                {
-                    var disp = ctx.Container.Resolve<DisposableManager>();
-                    if (state is IDisposable d)
-                        disp.Add(d);
-                });
-
+            Container.Bind<ManualTransitionTrigger<MenuState>>()
+                .AsSingle();
+            Container.Bind<ManualTransitionTrigger<GameState>>()
+                .AsSingle();
+            Container.Bind<ManualTransitionTrigger<MultiplayerGameState>>()
+                .AsSingle();
         }
+        
     }
 }

@@ -46,9 +46,9 @@ namespace Menu.Runtime.UIWorld
         {
             try
             {
-                await meshTransform.ScaleBounceAllAxes(duration: 0.35f)
-                    .ToUniTask(cancellationToken: ct);
-                
+                var sequence = meshTransform.ScaleBounceAllAxes(duration: 0.35f);
+                await using var reg = ct.Register(() => sequence.Stop());
+                await sequence;
                 PlayBaseButtonsAppearAsync(ct)
                     .Forget();
             }
@@ -56,6 +56,11 @@ namespace Menu.Runtime.UIWorld
             {
                 throw;
             }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            
         }
 
         private void PrepareAnimation()

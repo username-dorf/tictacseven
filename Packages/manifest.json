@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.bazyleu.unistate": "https://github.com/bazyleu/UniState.git?path=Assets/UniState",
     "com.cysharp.unitask": "2.5.5",
     "com.dbrizov.naughtyattributes": "2.1.4",
     "com.firstgeargames.fishnet": "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet",
