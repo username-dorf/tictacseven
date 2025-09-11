@@ -1,11 +1,12 @@
 using System;
 using Core.User;
+using Cysharp.Threading.Tasks;
 using FishNet;
 using FishNet.Connection;
-using FishNet.Transporting;
 using Multiplayer.Contracts;
 using Multiplayer.Server;
 using Zenject;
+using Channel = FishNet.Transporting.Channel;
 
 namespace Multiplayer.Connection
 {
@@ -35,7 +36,6 @@ namespace Multiplayer.Connection
         public void Initialize()
         {
             InstanceFinder.ServerManager.RegisterBroadcast<TerminateSessionResponse>(OnClientApproveTerminate);
-
         }
 
         public void CreateSession()
@@ -84,6 +84,11 @@ namespace Multiplayer.Connection
             _clientScanner.Stop();
             _launcher.ConnectToHost(ip);
         }
+        public void StopConnecting()
+        {
+            _clientScanner.Stop();
+            _launcher.CloseConnection();
+        }
 
         public void CancelHosting()
         {
@@ -93,14 +98,15 @@ namespace Multiplayer.Connection
             _hostBroadcaster.Stop();
         }
 
-        private void OnClientApproveTerminate(NetworkConnection arg1, TerminateSessionResponse arg2, Channel arg3)
+        private async void OnClientApproveTerminate(NetworkConnection arg1, TerminateSessionResponse arg2, Channel arg3)
         {
+            await UniTask.WaitForEndOfFrame();
             CancelHosting();
         }
 
         public void Dispose()
         {
-            InstanceFinder.ServerManager.UnregisterBroadcast<TerminateSessionResponse>(OnClientApproveTerminate);
+            InstanceFinder.ServerManager?.UnregisterBroadcast<TerminateSessionResponse>(OnClientApproveTerminate);
         }
     }
 }

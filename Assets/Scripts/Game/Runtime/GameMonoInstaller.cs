@@ -4,6 +4,7 @@ using Game.Field;
 using Game.States;
 using Game.UI;
 using Game.User;
+using UniState;
 using UnityEngine.Scripting;
 using Zenject;
 
@@ -26,11 +27,6 @@ namespace Game
                 .FromSubContainerResolve()
                 .ByNewGameObjectMethod(InstallSubcontainer)
                 .AsSingle();
-
-            Container.BindInterfacesTo<GameUIService>()
-                .AsSingle();
-           
-            
             
             Container.BindFactory<UserRoundModel,UserRoundModel.Factory>()
                 .AsSingle();
@@ -49,19 +45,16 @@ namespace Game
 
         private void InstallSubcontainer(DiContainer container)
         {
-            container.BindInterfacesAndSelfTo<StateFactory>()
-                .AsSingle();
-            
-            container.BindInterfacesTo<StateMachine>()
-                .AsSingle();
 
-            container.InstallState<InitialSubstate>();
-            container.InstallState<UserMoveSubstate>();
-            container.InstallState<AgentAIMoveSubstate>();
-            container.InstallState<ValidateSubstate>();
-            container.InstallState<RoundResultSubstate>();
-            container.InstallState<RoundClearSubstate>();
-            container.InstallState<FinalRoundResultSubstateGameSubstate>();
+            container.BindStateMachine<IStateMachine, GameStateMachine>();
+
+            container.BindStateAsSingle<InitialSubstate>();
+            container.BindStateAsSingle<UserMoveSubstate>();
+            container.BindStateAsSingle<AgentAIMoveSubstate>();
+            container.BindStateAsSingle<ValidateSubstate>();
+            container.BindStateAsSingle<RoundResultSubstate>();
+            container.BindStateAsSingle<RoundClearSubstate>();
+            container.BindStateAsSingle<FinalRoundResultSubstateGameSubstate>();
             
             container.BindInterfacesTo<GameSubstatesFacade>()
                 .AsSingle();

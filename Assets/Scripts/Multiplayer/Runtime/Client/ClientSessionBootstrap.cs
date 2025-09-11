@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
 using Core.StateMachine;
-using Core.User;
 using FishNet;
 using Cysharp.Threading.Tasks;
 using Game.States;
-using Multiplayer.Client.States;
 using Multiplayer.Contracts;
+using UniState;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Zenject;
 using Channel = FishNet.Transporting.Channel;
 using InitialSubstate = Multiplayer.Client.States.InitialSubstate;
@@ -17,15 +17,17 @@ namespace Multiplayer.Client
 {
     public class ClientSessionBootstrap : IDisposable
     {
-        private IStateMachine _stateMachine;
         private SceneContextRegistry _sceneContextRegistry;
         private IStateMachine _substateMachine;
+        private ManualTransitionTrigger<MultiplayerGameState> _multTransitionTrigger;
 
-        public ClientSessionBootstrap(IStateMachine stateMachine, SceneContextRegistry sceneContextRegistry)
+        public ClientSessionBootstrap(ManualTransitionTrigger<MultiplayerGameState> multTransitionTrigger,
+            SceneContextRegistry sceneContextRegistry)
         {
+            _multTransitionTrigger = multTransitionTrigger;
             _sceneContextRegistry = sceneContextRegistry;
-            _stateMachine = stateMachine;
         }
+
         public void Launch()
         {
             InstanceFinder.ClientManager.RegisterBroadcast<ClientInitialization>(OnClientInitializationRequest);
@@ -34,36 +36,60 @@ namespace Multiplayer.Client
         private void OnClientInitializationRequest(ClientInitialization request,
             Channel channel)
         {
-            _stateMachine.ChangeStateAsync<MultiplayerGameState>(CancellationToken.None)
-                .ContinueWith(()=>SubstateBootstrap(request, CancellationToken.None))
-                .Forget();
+            UniTask.Void(async () =>
+            {
+                try
+                {
+                    await UniTask.SwitchToMainThread();
+                    _multTransitionTrigger.Continue();
+                    await _multTransitionTrigger.WhenArrivedAsync(CancellationToken.None);
+                    await SubstateBootstrap(request, CancellationToken.None);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            });
         }
 
         private async UniTask SubstateBootstrap(ClientInitialization request, CancellationToken ct)
         {
-            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            await UniTask.WaitUntil(() =>
+            {
+                var active = SceneManager.GetActiveScene();
+                var c = _sceneContextRegistry.GetContainerForScene(active);
+                return c != null && c.HasBinding<IGameSubstateResolver>();
+            }, cancellationToken: ct);
+
+            var scene = SceneManager.GetActiveScene();
             var container = _sceneContextRegistry.GetContainerForScene(scene);
-            
-            await UniTask.WaitUntil(
-                () => container.HasBinding<IGameSubstateResolver>(),
-                cancellationToken: ct
-            );
-            
+
             var resolver = container.Resolve<IGameSubstateResolver>();
             _substateMachine = resolver.Resolve<IStateMachine>();
+            var stateMachineDisposable = resolver.Resolve<ClientStateMachineDisposable>();
 
-            var payload = new InitialSubstate.Payload
+            var payload = new InitialSubstate.PayloadModel
             {
                 Owner = request.Owner,
                 OpponentOwner = request.OpponentOwner,
                 OpponentPreferences = request.Opponent
             };
-            await _substateMachine.ChangeStateAsync<InitialSubstate,InitialSubstate.Payload>(payload, ct);
+            await _substateMachine.Execute<InitialSubstate, InitialSubstate.PayloadModel>(payload,
+                stateMachineDisposable.Token);
         }
 
         public void Dispose()
         {
-            InstanceFinder.ClientManager.UnregisterBroadcast<ClientInitialization>(OnClientInitializationRequest);
+            try
+            {
+                InstanceFinder.ClientManager.UnregisterBroadcast<ClientInitialization>(OnClientInitializationRequest);
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Core.User;
 using Cysharp.Threading.Tasks;
+using FishNet;
 using FishNet.Connection;
 using Multiplayer.Client;
 using Multiplayer.Connection;
@@ -36,23 +37,49 @@ namespace Multiplayer.Server
         public void Initialize()
         {
             _opponentConnectionListener.OnConnectionApproved
-                .Subscribe(LaunchSession)
+                .Subscribe(data=>LaunchSession(data).Forget())
                 .AddTo(_disposable);
         }
 
-        private void LaunchSession((NetworkConnection opponentConnection, UserPreferencesDto opponentPreferences) data)
+        private async UniTask LaunchSession((NetworkConnection opponentConnection, UserPreferencesDto opponentPreferences) data)
         {
-            var hasHostConnection = _hostConnectionProvider.TryGetConnection(out var hostConnection);
-            if (!hasHostConnection)
-                throw new Exception("Can't resolve host network connection");
+            NetworkConnection hostConnection = null;
+            try
+            {
+                if (!_hostConnectionProvider.TryGetConnection(out hostConnection))
+                    hostConnection = await WaitHostConnAsync(3000);
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.LogError(
+                    $"[Server] Can't resolve host network connection (timeout). Clients={InstanceFinder.ServerManager.Clients.Count}");
+                foreach (var kv in InstanceFinder.ServerManager.Clients)
+                    Debug.Log($"[Server] Client {kv.Key}: IsLocalClient={kv.Value.IsLocalClient}");
+                return;
+            }
+
             var hostPreferences = UserPreferencesDto.Create(_preferencesProvider.Current);
             var hostClientConnection = new ClientConnection(hostConnection, hostPreferences);
             var opponentClientConnection = new ClientConnection(data.opponentConnection, data.opponentPreferences);
 
-            _serverAccessor.Current.LaunchSession(hostClientConnection, opponentClientConnection,CancellationToken.None)
+            _serverAccessor.Current
+                .LaunchSession(hostClientConnection, opponentClientConnection, CancellationToken.None)
                 .Forget();
-            
+
             Debug.Log($"Game launched for {data.opponentConnection.ClientId} and {hostConnection.ClientId}");
+        }
+
+        private async UniTask<NetworkConnection> WaitHostConnAsync(int timeoutMs = 3000)
+        {
+            var cts = new CancellationTokenSource(timeoutMs);
+            NetworkConnection host = null;
+
+            await UniTask.WaitUntil(
+                () => _hostConnectionProvider.TryGetConnection(out host),
+                cancellationToken: cts.Token
+            );
+
+            return host;
         }
     }
 }

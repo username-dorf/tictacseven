@@ -3,6 +3,7 @@ using System.Threading;
 using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using Game.States;
+using UniState;
 using UnityEngine;
 using Zenject;
 
@@ -24,12 +25,13 @@ namespace Game
         public async UniTask InitializeAsync(CancellationToken ct)
         {
             var substateMachine = _gameSubstateResolver.Resolve<IStateMachine>();
-            await substateMachine.ChangeStateAsync<InitialSubstate>(ct);
+            await substateMachine.Execute<InitialSubstate>(ct);
         }
 
         public void Dispose()
         {
-            _cts.Cancel();
+            _cts?.Cancel();
+            _cts?.Dispose();
         }
 
         public void Initialize()
@@ -38,9 +40,7 @@ namespace Game
             {
                 try
                 {
-                    Debug.Log("[GameBootstrap] Initialize enter");
                     await InitializeAsync(_cts.Token);
-                    Debug.Log("[GameBootstrap] Initialize done");
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e)

@@ -65,7 +65,7 @@ namespace Multiplayer.UI.Windows.Views
             foreach (var subview in _subviews)
             {
                 var isActive = subview.Type == subviewType;
-                subview.SetActiveAsync(isActive,CancellationToken.None);
+                _ = subview.SetActiveAsync(isActive,CancellationToken.None);
             }
         }
 
@@ -76,9 +76,10 @@ namespace Multiplayer.UI.Windows.Views
             [SerializeField] private Transform parent;
             public abstract T Type { get; }
 
-            public async UniTask SetActiveAsync(bool isActive, CancellationToken ct)
+            public UniTask SetActiveAsync(bool isActive, CancellationToken ct)
             {
                 parent.gameObject.SetActive(isActive);
+                return UniTask.CompletedTask;
             }
         }
 

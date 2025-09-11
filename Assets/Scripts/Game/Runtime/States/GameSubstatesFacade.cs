@@ -77,9 +77,7 @@ namespace Game.States
 
 
         public T Resolve<T>() => _sub.Resolve<T>();
-
-        public IEnumerable<T> ResolveAll<T>() => _sub.ResolveAll<T>();
-
+        
 
         public void Dispose()
         {

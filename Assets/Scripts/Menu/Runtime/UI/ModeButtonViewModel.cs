@@ -12,6 +12,7 @@ namespace Menu.UI
     public class ModeButtonViewModel : IDisposable
     {
         private readonly Func<CancellationToken, UniTask> _actionFactory;
+        private readonly Action _action;
         private SignalBus _signalBus;
 
         public ModeButtonViewModel(Func<CancellationToken, UniTask> actionFactory, SignalBus signalBus)
@@ -20,8 +21,25 @@ namespace Menu.UI
             _actionFactory = actionFactory;
         }
 
+        public ModeButtonViewModel(Action action, SignalBus signalBus)
+        {
+            _action = action;
+            _signalBus = signalBus;
+        }
+        public void Execute()
+        {
+            ExecuteSfx();
+            _action?.Invoke();
+        }
+
         public async UniTask ExecuteAsync(CancellationToken ct = default)
         {
+            if (_actionFactory is null)
+            {
+                Execute();
+                return;
+            }
+            
             try
             {
                 ExecuteSfx();
@@ -49,9 +67,25 @@ namespace Menu.UI
         
         }
 
-        public class Factory : PlaceholderFactory<Func<CancellationToken, UniTask>,ModeButtonViewModel>
+        public class Factory
         {
+            private SignalBus _signalBus;
+
+            public Factory(SignalBus signalBus)
+            {
+                _signalBus = signalBus;
+            }
+            public ModeButtonViewModel Create(Func<CancellationToken, UniTask> actionFactory)
+            {
+                return new ModeButtonViewModel(actionFactory, _signalBus);
+            }
+
+            public ModeButtonViewModel Create(Action action)
+            {
+                return new ModeButtonViewModel(action, _signalBus);
+            }
             
         }
+        
     }
 }

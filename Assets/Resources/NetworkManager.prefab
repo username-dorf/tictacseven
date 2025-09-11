@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3079800426378766011}
   - component: {fileID: 6852697534889031472}
+  - component: {fileID: 5823754516540214417}
+  - component: {fileID: 6081393478642024858}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -51,3 +53,45 @@ MonoBehaviour:
   _persistence: 0
   _logging: {fileID: 0}
   _spawnablePrefabs: {fileID: 11400000, guid: a2d87be196fdf4497b39f7dd9896cc5c, type: 2}
+--- !u!114 &5823754516540214417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377798656842470316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aca43cf6f20e77c4f8fcc078fd85081f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.Client.ClientManager
+  _remoteServerTimeout: 2
+  _remoteServerTimeoutDuration: 5
+  _changeFrameRate: 1
+  _frameRate: 500
+--- !u!114 &6081393478642024858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377798656842470316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68828c85278210948b9d50a8db3aab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.Server.ServerManager
+  _authenticator: {fileID: 0}
+  _remoteClientTimeout: 2
+  _remoteClientTimeoutDuration: 5
+  _allowPredictedSpawning: 0
+  _reservedObjectIds: 15
+  _syncTypeRate: 0.1
+  SpawnPacking:
+    Position: 0
+    Rotation: 2
+    Scale: 2
+  _changeFrameRate: 1
+  _frameRate: 500
+  _shareIds: 1
+  _startOnHeadless: 1

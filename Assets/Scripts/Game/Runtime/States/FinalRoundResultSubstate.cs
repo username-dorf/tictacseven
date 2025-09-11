@@ -6,60 +6,54 @@ using Core.UI.Windows;
 using Core.UI.Windows.Views;
 using Cysharp.Threading.Tasks;
 using Game.User;
+using UniState;
 using Zenject;
 
 namespace Game.States
 {
-    public class FinalRoundResultSubstateGameSubstate: GameSubstate<FinalRoundResultSubstateGameSubstate.Payload>
+    public class FinalRoundResultSubstateGameSubstate: GameSubstate<FinalRoundResultSubstateGameSubstate.PayloadModel>
     {
-        private List<UserRoundModel> _roundModels;
+        private LazyInject<List<UserRoundModel>> _roundModels;
         private IWindowsController _windowsController;
-        private UserRoundModel.Provider _userRoundModelProvider;
-        private AIUserRoundModel.Provider _opponentRoundModelProvider;
+        private LazyInject<UserRoundModel.Provider> _userRoundModelProvider;
+        private LazyInject<AIUserRoundModel.Provider> _opponentRoundModelProvider;
         private IStateMachine _mainStateMachine;
+        private ManualTransitionTrigger<MenuState> _menuTransitionTrigger;
 
-        public class Payload
+        public struct PayloadModel
         {
             public List<int> WinnerOwners { get; }
 
-            public Payload(params int[] winnerOwners)
+            public PayloadModel(params int[] winnerOwners)
             {
                 WinnerOwners = new List<int>(winnerOwners);
             }
         }
 
         public FinalRoundResultSubstateGameSubstate(
-            IStateMachine mainStateMachine,
-            IGameSubstateResolver substateResolverFactory,
-            [Inject(Id = GameSubstatesFacade.ROUND_MODELS_ALIAS)] List<UserRoundModel> roundModels,
-            UserRoundModel.Provider userRoundModelProvider,
-            AIUserRoundModel.Provider opponentRoundModelProvider,
-            IWindowsController windowsController) : base(substateResolverFactory)
+            ManualTransitionTrigger<MenuState> menuTransitionTrigger,
+            [Inject(Id = GameSubstatesFacade.ROUND_MODELS_ALIAS)] LazyInject<List<UserRoundModel>> roundModels,
+            LazyInject<UserRoundModel.Provider> userRoundModelProvider,
+            LazyInject<AIUserRoundModel.Provider> opponentRoundModelProvider,
+            IWindowsController windowsController)
         {
-            _mainStateMachine = mainStateMachine;
+            _menuTransitionTrigger = menuTransitionTrigger;
             _opponentRoundModelProvider = opponentRoundModelProvider;
             _userRoundModelProvider = userRoundModelProvider;
             _windowsController = windowsController;
             _roundModels = roundModels;
         }
-        
-        protected override async UniTask EnterAsync(Payload payload, CancellationToken ct)
-        {
-            _roundModels.UpdateAllModels(payload.WinnerOwners);
-            var windowPayload = new UIWindowRoundResult.Payload(_userRoundModelProvider.Model,_opponentRoundModelProvider.Model);
-            await _windowsController.OpenAsync<UIWindowRoundResult,UIWindowRoundResult.Payload>(windowPayload,ct);
-            await UniTask.Delay(TimeSpan.FromSeconds(2f), cancellationToken: ct);
-            await _mainStateMachine.ChangeStateAsync<MenuState>(CancellationToken.None);
 
-        }
-        public override UniTask ExitAsync(CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
-            return UniTask.CompletedTask;
-        }
-
-        public override void Dispose()
-        {
+            _roundModels.Value.UpdateAllModels(Payload.WinnerOwners);
+            var windowPayload =
+                new UIWindowRoundResult.Payload(_userRoundModelProvider.Value.Model, _opponentRoundModelProvider.Value.Model);
+            await _windowsController.OpenAsync<UIWindowRoundResult, UIWindowRoundResult.Payload>(windowPayload, token);
+            await UniTask.Delay(TimeSpan.FromSeconds(2f), cancellationToken: token);
             
+            _menuTransitionTrigger.Continue();
+            return Transition.GoToExit();
         }
     }
 }

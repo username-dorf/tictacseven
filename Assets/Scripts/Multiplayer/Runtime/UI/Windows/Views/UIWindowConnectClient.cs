@@ -97,6 +97,7 @@ namespace Multiplayer.UI.Windows.Views
 
             public void StopDiscovery()
             {
+                _sessionController.StopConnecting();
                 _sessionController.StopDiscovery();
                 _ = _windowsController.CloseTopAsync();
 

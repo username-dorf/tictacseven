@@ -7,6 +7,7 @@ using FishNet.Connection;
 using FishNet.Managing.Server;
 using Multiplayer.Contracts;
 using UniRx;
+using UnityEngine;
 
 namespace Multiplayer.Connection
 {
@@ -46,6 +47,7 @@ namespace Multiplayer.Connection
             _pending.Add(conn);
 
             OnJoinRequested?.Invoke(conn, msg);
+            Debug.Log("Join request received from " + conn.ClientId);
         }
 
         public void Approve(NetworkConnection conn, JoinRequest request)

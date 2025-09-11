@@ -1,4 +1,6 @@
+using System;
 using System.Threading;
+using Core.StateMachine;
 using Core.User;
 using Cysharp.Threading.Tasks;
 using FishNet;
@@ -8,6 +10,7 @@ using Game.States;
 using Game.User;
 using Multiplayer.Contracts;
 using UniRx;
+using UniState;
 using UnityEngine;
 using Zenject;
 using Channel = FishNet.Transporting.Channel;
@@ -16,55 +19,90 @@ namespace Multiplayer.Client.States
 {
     public class TurnSubstate: GameSubstate<ClientTurn>
     {
-        private CompositeDisposable _disposable;
-        private FieldModel _fieldModel;
-        private UserRoundModel _userRoundModel;
+        private LazyInject<FieldModel> _fieldModel;
+        private LazyInject<UserRoundModel> _userRoundModel;
+        private LazyInject<UserEntitiesModel> _userEntitiesModel;
+        private LazyInject<UserRoundModel> _opponentRoundModel;
+        private LazyInject<IStateProviderDebug> _stateProviderDebug;
+
         private IUserPreferencesProvider _userPreferencesProvider;
-        private UserEntitiesModel _userEntitiesModel;
-        private UserRoundModel _opponentRoundModel;
+
+        private ReactiveCommand<ClientFieldSync> _onFieldSyncReceived;
+        private CancellationTokenSource _waitCts;
 
         public TurnSubstate(
-            FieldModel fieldModel,
-            [Inject(Id = UserModelConfig.OPPONENT_ID)] UserRoundModel opponentRoundModel,
-            [Inject(Id = UserModelConfig.ID)] UserRoundModel userRoundModel,
-            [Inject(Id = UserModelConfig.ID)] UserEntitiesModel userEntitiesModel,
-            IUserPreferencesProvider userPreferencesProvider,
-            IGameSubstateResolver substateResolverFactory) : base(substateResolverFactory)
+            LazyInject<FieldModel> fieldModel,
+            [Inject(Id = UserModelConfig.OPPONENT_ID)] LazyInject<UserRoundModel> opponentRoundModel,
+            [Inject(Id = UserModelConfig.ID)] LazyInject<UserRoundModel> userRoundModel,
+            [Inject(Id = UserModelConfig.ID)] LazyInject<UserEntitiesModel> userEntitiesModel,
+            [InjectOptional] LazyInject<IStateProviderDebug> stateProviderDebug,
+            IUserPreferencesProvider userPreferencesProvider)
         {
+            _stateProviderDebug = stateProviderDebug;
             _opponentRoundModel = opponentRoundModel;
             _userEntitiesModel = userEntitiesModel;
             _userPreferencesProvider = userPreferencesProvider;
             _userRoundModel = userRoundModel;
             _fieldModel = fieldModel;
-            _disposable = new CompositeDisposable();
+
+            _onFieldSyncReceived = new ReactiveCommand<ClientFieldSync>();
         }
 
-        protected override async UniTask EnterAsync(ClientTurn payload, CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken ct)
         {
-            var isCurrentClientActive = _userPreferencesProvider.Current.User.Id == payload.ActiveClientId;
-            _userRoundModel.SetAwaitingTurn(isCurrentClientActive);
-            _opponentRoundModel.SetAwaitingTurn(!isCurrentClientActive);
+            _stateProviderDebug?.Value?.ChangeState(this);
+            AddDisposables();
 
-            _userEntitiesModel.SetInteractionAll(isCurrentClientActive);
+            var isCurrentClientActive = _userPreferencesProvider.Current.User.Id == Payload.ActiveClientId;
+            _userRoundModel.Value.SetAwaitingTurn(isCurrentClientActive);
+            _opponentRoundModel.Value.SetAwaitingTurn(!isCurrentClientActive);
+
+            _userEntitiesModel.Value.SetInteractionAll(isCurrentClientActive);
             if (!isCurrentClientActive)
             {
-                SubstateMachine.ChangeStateAsync<ServerSyncSubstate>(CancellationToken.None)
-                    .Forget();
-                return;
+                return Transition.GoTo<WaitTurnSubstate>();
             }
 
             InstanceFinder.ClientManager.RegisterBroadcast<ClientTurnTimeout>(OnTurnTimeout);
+            InstanceFinder.ClientManager.RegisterBroadcast<ClientFieldSync>(OnTurnSync);
 
-            _fieldModel.OnEntityChanged
-                .Subscribe(OnTurnDone)
-                .AddTo(_disposable);
+            _waitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            _waitCts.AddTo(Disposables);
+
+            try
+            {
+                var move = await _fieldModel.Value.OnEntityChanged
+                    .First()
+                    .ToUniTask(cancellationToken: _waitCts.Token);
+
+                if (_waitCts.IsCancellationRequested)
+                    return OnTimeoutGoToWait();
+
+                OnTurnDone(move);
+
+                var sync = await _onFieldSyncReceived
+                    .First()
+                    .ToUniTask(cancellationToken: _waitCts.Token);
+
+                return Transition.GoTo<ServerSyncSubstate, ClientFieldSync>(sync);
+            }
+            catch (OperationCanceledException)
+            {
+                return OnTimeoutGoToWait();
+            }
+
         }
 
-        public override UniTask ExitAsync(CancellationToken ct)
+        public override UniTask Exit(CancellationToken ct)
         {
+            InstanceFinder.ClientManager.UnregisterBroadcast<ClientFieldSync>(OnTurnSync);
             InstanceFinder.ClientManager.UnregisterBroadcast<ClientTurnTimeout>(OnTurnTimeout);
-            _disposable?.Clear();
-            return UniTask.CompletedTask;
+            
+            _waitCts?.Cancel();
+            _waitCts?.Dispose();
+            _waitCts = null;
+            
+            return base.Exit(ct);
         }
 
         private void OnTurnDone((Vector2Int coors, EntityModel model) value)
@@ -76,24 +114,33 @@ namespace Multiplayer.Client.States
                 Coordinates = value.coors,
             };
             InstanceFinder.ClientManager.Broadcast(response);
-            _userEntitiesModel.SetInteractionAll(false);
-            
-            SubstateMachine.ChangeStateAsync<ServerSyncSubstate>(CancellationToken.None)
-                .Forget();
+            _userEntitiesModel.Value.SetInteractionAll(false);
         }
 
         private void OnTurnTimeout(ClientTurnTimeout request, Channel channel)
         {
-            SubstateMachine.ChangeStateAsync<ServerSyncSubstate>(CancellationToken.None)
-                .Forget();
-            
-            _userEntitiesModel.SetInteractionAll(false);
+            _userEntitiesModel.Value.SetInteractionAll(false);
+            _waitCts?.Cancel();
         }
 
-        public override void Dispose()
+        private void OnTurnSync(ClientFieldSync clientFieldSync, Channel channel)
         {
-            InstanceFinder.ClientManager.UnregisterBroadcast<ClientTurnTimeout>(OnTurnTimeout);
-            _disposable?.Dispose();
+            _onFieldSyncReceived?.Execute(clientFieldSync);
+        }
+
+        private StateTransitionInfo OnTimeoutGoToWait()
+        {
+            _userRoundModel.Value.SetAwaitingTurn(false);
+            _opponentRoundModel.Value.SetAwaitingTurn(true);
+            _userEntitiesModel.Value.SetInteractionAll(false);
+            return Transition.GoTo<WaitTurnSubstate>();
+        }
+
+        private void AddDisposables()
+        {
+            _onFieldSyncReceived.AddTo(Disposables);
+            Disposables.Add(()=>InstanceFinder.ClientManager.UnregisterBroadcast<ClientFieldSync>(OnTurnSync));
+            Disposables.Add(()=>InstanceFinder.ClientManager.UnregisterBroadcast<ClientTurnTimeout>(OnTurnTimeout));
         }
     }
 }

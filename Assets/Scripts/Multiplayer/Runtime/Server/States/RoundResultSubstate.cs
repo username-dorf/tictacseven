@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using Core.StateMachine;
 using Cysharp.Threading.Tasks;
 using FishNet;
 using FishNet.Connection;
@@ -7,58 +8,66 @@ using Game.Field;
 using Multiplayer.Connection;
 using Multiplayer.Contracts;
 using UniRx;
+using UniState;
+using Zenject;
 using Channel = FishNet.Transporting.Channel;
 
 namespace Multiplayer.Server.States
 {
-    public class RoundResultSubstate : ServerSubstate<RoundResultSubstate.Payload>
+    public class RoundResultSubstate : ServerSubstate<RoundResultSubstate.PayloadModel>
     {
         private ReactiveProperty<int> _repliedClientsCount;
-        private readonly HashSet<int> _whoReplied;
-        
-        private FieldModel _fieldModel;
-        private IServerClientsProvider _clientsProvider;
+        private HashSet<int> _whoReplied;
 
-        public struct Payload
+        private LazyInject<FieldModel> _fieldModel;
+        private LazyInject<IServerClientsProvider> _clientsProvider;
+        private LazyInject<IStateProviderDebug> _stateProviderDebug;
+
+        public struct PayloadModel
         {
             public int PassedRounds;
             public List<string> WinnerIds;
         }
-        
+
         public RoundResultSubstate(
-            FieldModel fieldModel,
-            IServerClientsProvider clientsProvider,
-            IServerSubstateResolver substateResolverFactory) 
-            : base(substateResolverFactory)
+            LazyInject<FieldModel> fieldModel,
+            LazyInject<IServerClientsProvider> clientsProvider,
+            [InjectOptional] LazyInject<IStateProviderDebug> stateProviderDebug)
         {
+            _stateProviderDebug = stateProviderDebug;
             _clientsProvider = clientsProvider;
             _fieldModel = fieldModel;
             _whoReplied = new HashSet<int>();
             _repliedClientsCount = new ReactiveProperty<int>();
         }
 
-        protected override async UniTask EnterAsync(Payload payload, CancellationToken ct)
+        public override async UniTask<StateTransitionInfo> Execute(CancellationToken ct)
         {
+            _stateProviderDebug?.Value?.ChangeState(this);
+            AddDisposables();
+
             InstanceFinder.ServerManager.RegisterBroadcast<RoundResultResponse>(OnRoundResultResponse);
 
             InstanceFinder.ServerManager.Broadcast(new RoundResult()
             {
-                WinnerIds = payload.WinnerIds
+                WinnerIds = Payload.WinnerIds
             });
-            
+
             try
             {
                 await _repliedClientsCount
                     .Where(v => v >= ConnectionConfig.MAX_CLIENTS)
-                    .First()                            
-                    .ToUniTask(cancellationToken: ct); 
-                
-                await OnAllRoundResultResponse(payload.PassedRounds, ct);
+                    .First()
+                    .ToUniTask(cancellationToken: ct);
+
+                return OnAllRoundResultResponse(Payload.PassedRounds, ct);
             }
             catch
             {
                 // ignored
             }
+
+            return Transition.GoToExit();
         }
 
         private void OnRoundResultResponse(NetworkConnection connection, RoundResultResponse arg2, Channel arg3)
@@ -69,31 +78,31 @@ namespace Multiplayer.Server.States
             }
         }
 
-        private async UniTask OnAllRoundResultResponse(int passedRounds, CancellationToken ct)
+        private StateTransitionInfo OnAllRoundResultResponse(int passedRounds, CancellationToken ct)
         {
             if (passedRounds >= FieldConfig.ROUNDS_AMOUNT)
             {
                 InstanceFinder.ServerManager.Broadcast(new TerminateSession());
-                return;
+                return Transition.GoToExit();
             }
-            
-            _fieldModel?.Drop();
-            _clientsProvider?.Drop();
-            await SubstateMachine.ChangeStateAsync<ClientTurnSubstate>(ct);
-        }
-        
-        public override UniTask ExitAsync(CancellationToken ct)
-        {
-            _whoReplied.Clear();
-            InstanceFinder.ServerManager.UnregisterBroadcast<RoundResultResponse>(OnRoundResultResponse);
-            return UniTask.CompletedTask;
+
+            _fieldModel?.Value.Drop();
+            _clientsProvider?.Value.Drop();
+            return Transition.GoTo<ClientTurnSubstate>();
         }
 
-        public override void Dispose()
+        public override UniTask Exit(CancellationToken ct)
         {
-            InstanceFinder.ServerManager.UnregisterBroadcast<RoundResultResponse>(OnRoundResultResponse);
             _whoReplied.Clear();
-            _repliedClientsCount?.Dispose();
+            InstanceFinder.ServerManager.UnregisterBroadcast<RoundResultResponse>(OnRoundResultResponse);
+            return base.Exit(ct);
+        }
+
+        private void AddDisposables()
+        {
+            Disposables.Add(() =>
+                InstanceFinder.ServerManager.UnregisterBroadcast<RoundResultResponse>(OnRoundResultResponse));
+            _repliedClientsCount.AddTo(Disposables);
         }
     }
 }

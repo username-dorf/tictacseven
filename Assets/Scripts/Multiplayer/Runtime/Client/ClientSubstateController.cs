@@ -6,79 +6,129 @@ using Core.UI.Windows.Views;
 using Core.User;
 using Cysharp.Threading.Tasks;
 using FishNet;
-using Game.States;
-using Multiplayer.Client.States;
+using FishNet.Transporting;
 using Multiplayer.Contracts;
 using Zenject;
 using Channel = FishNet.Transporting.Channel;
-using RoundResultSubstate = Multiplayer.Client.States.RoundResultSubstate;
 
 namespace Multiplayer.Client
 {
-    public class ClientSubstateController : IInitializable, IDisposable
+    public interface ISessionExitClient
     {
-        private IStateMachine _stateMachine;
-        private IStateMachine _substateMachine;
+        UniTask LeaveByUserAsync();
+    }
+    public class ClientSubstateController : IInitializable, IDisposable, ISessionExitClient
+    {
         private IWindowsController _windowsController;
         private IUserPreferencesProvider _userPreferencesProvider;
+        private ManualTransitionTrigger<MenuState> _menuTransitionTrigger;
+        
+        private int  _notifiedOnce;
+        private bool _selfLeaving;
+        private CancellationTokenSource _subCts;
+
 
         public ClientSubstateController(
-            IStateMachine stateMachine,
+            ManualTransitionTrigger<MenuState> menuTransitionTrigger,
             IWindowsController windowsController,
-            IGameSubstateResolver substateResolver,
             IUserPreferencesProvider userPreferencesProvider)
         {
+            _menuTransitionTrigger = menuTransitionTrigger;
             _userPreferencesProvider = userPreferencesProvider;
             _windowsController = windowsController;
-            _stateMachine = stateMachine;
-            _substateMachine = substateResolver.Resolve<IStateMachine>();
-
         }
         
         public void Initialize()
         {
+            _subCts = new CancellationTokenSource();
+            _notifiedOnce = 0;
+            _selfLeaving = false;
+            
             InstanceFinder.ClientManager.RegisterBroadcast<TerminateSession>(OnTerminateRequested);
-            InstanceFinder.ClientManager.RegisterBroadcast<ClientTurn>(OnClientTurn);
-            InstanceFinder.ClientManager.RegisterBroadcast<RoundResult>(OnRoundResult);
+            InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionStateChanged;
+            InstanceFinder.ClientManager.OnClientTimeOut += OnClientTimedOut;
 
         }
-
-        private void OnRoundResult(RoundResult roundResult, Channel arg2)
+        public async UniTask LeaveByUserAsync()
         {
-            _substateMachine.ChangeStateAsync<RoundResultSubstate,RoundResult>(roundResult, CancellationToken.None)
-                .Forget();
+            _selfLeaving = true;
+
+            await NotifyAndReturnToMenuOnceAsync(reason: null, sendAck: false);
+            var clientId = _userPreferencesProvider.Current.User.Id;
+            InstanceFinder.ClientManager.Broadcast(new ClientLeaveSessionNotice { ClientId = clientId });
+            InstanceFinder.ClientManager.StopConnection();
         }
 
-        private void OnTerminateRequested(TerminateSession arg1, Channel arg2)
+        private void OnTerminateRequested(TerminateSession msg, Channel _)
         {
-            var ct = CancellationToken.None;
-            _stateMachine.ChangeStateAsync<MenuState>(ct)
-                .ContinueWith(()=>InstanceFinder.ClientManager.Broadcast(new TerminateSessionResponse()))
-                .ContinueWith(()=>OnTerminateSessionApproved(arg1,ct))
-                .Forget();
-        }
-        private void OnClientTurn(ClientTurn request, Channel channel)
-        {
-            _substateMachine.ChangeStateAsync<TurnSubstate,ClientTurn>(request, CancellationToken.None)
-                .Forget();
-        }
-
-        private async UniTask OnTerminateSessionApproved(TerminateSession request, CancellationToken ct)
-        {
-            if(string.IsNullOrEmpty(request.Reason))
+            if (msg.ClientId == _userPreferencesProvider.Current.User.Id) 
                 return;
-            if(request.ClientId == _userPreferencesProvider.Current.User.Id)
+
+            UniTask.Void(async () =>
+            {
+                await NotifyAndReturnToMenuOnceAsync(
+                    reason: string.IsNullOrEmpty(msg.Reason) ? null : msg.Reason,
+                    sendAck: true
+                );
+            });
+        }
+        private void OnClientConnectionStateChanged(ClientConnectionStateArgs clientConnectionStateArgs)
+        {
+            if (InstanceFinder.IsHostStarted)
                 return;
-            var payload = new UIWindowModal.Payload(request.Reason, null);
-            _windowsController.OpenAsync<UIWindowModal, UIWindowModal.Payload>(payload, ct);
+            
+            if (_selfLeaving)
+                return;
+
+            if (clientConnectionStateArgs.ConnectionState == LocalConnectionState.Stopped)
+            {
+                UniTask.Void(async () =>
+                {
+                    await NotifyAndReturnToMenuOnceAsync(TerminateSessionReason.HOST_DISCONNECT, sendAck: false);
+                });
+            }
+        }
+        
+        private async UniTask NotifyAndReturnToMenuOnceAsync(string reason, bool sendAck)
+        {
+            if (Interlocked.CompareExchange(ref _notifiedOnce, 1, 0) != 0)
+                return;
+
+            await UniTask.SwitchToMainThread();
+
+            _subCts?.Cancel();
+
+            _menuTransitionTrigger.Continue();
+            
+            await _menuTransitionTrigger.WhenArrivedAsync(CancellationToken.None);
+
+            if (sendAck)
+                InstanceFinder.ClientManager.Broadcast(new TerminateSessionResponse());
+            
+            if (!string.IsNullOrEmpty(reason))
+            {
+                var payload = new UIWindowModal.Payload(reason, null);
+                await _windowsController.OpenAsync<UIWindowModal, UIWindowModal.Payload>(payload, CancellationToken.None);
+            }
+
+            _subCts?.Dispose();
+            _subCts = new CancellationTokenSource();
+        }
+        private void OnClientTimedOut()
+        {
+            UniTask.Void(async () =>
+            {
+                await NotifyAndReturnToMenuOnceAsync(TerminateSessionReason.HOST_DISCONNECT, sendAck:false);
+            });
         }
         public void Dispose()
         {
             InstanceFinder.ClientManager.UnregisterBroadcast<TerminateSession>(OnTerminateRequested);
-            InstanceFinder.ClientManager.UnregisterBroadcast<ClientTurn>(OnClientTurn);
-            InstanceFinder.ClientManager.UnregisterBroadcast<RoundResult>(OnRoundResult);
+            InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionStateChanged;
+            InstanceFinder.ClientManager.OnClientTimeOut -= OnClientTimedOut;
 
+            _subCts?.Cancel();
+            _subCts?.Dispose();
         }
-
     }
 }

@@ -9,7 +9,7 @@ namespace Multiplayer.Server
     }
     public class ServerSubstateScope : IServerSubstateResolver
     {
-        private readonly DiContainer _sub;
+        private DiContainer _sub;
 
         public ServerSubstateScope(DiContainer sub)
         {
@@ -28,6 +28,7 @@ namespace Multiplayer.Server
         public void Dispose()
         {
             _sub.TryResolve<DisposableManager>()?.Dispose();
+            _sub = null;
         }
 
         public class Factory : PlaceholderFactory<ServerSubstateScope> { }

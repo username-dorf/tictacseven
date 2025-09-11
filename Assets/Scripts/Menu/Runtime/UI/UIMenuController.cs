@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using Core.StateMachine;
 using Core.UI;
 using Core.UI.Components;
@@ -8,27 +6,25 @@ using Core.UI.Windows.Views;
 using Cysharp.Threading.Tasks;
 using Menu.Runtime.UIWorld;
 using Menu.UI;
-using Menu.UIWorld;
 using Multiplayer.UI.Windows.Views;
-using Zenject;
 
 namespace Menu.Runtime.UI
 {
     public class UIMenuController : UIController<UIMenu>
     {
-        private IStateMachine _stateMachine;
         private IWindowsController _windowsController;
         private ModeButtonViewModel.Factory _viewModelFactory;
+        private ManualTransitionTrigger<GameState> _gameTransitionTrigger;
 
         public UIMenuController(
             UIProvider<UIMenu> uiProvider,
-            IStateMachine stateMachine,
             IWindowsController windowsController,
-            ModeButtonViewModel.Factory viewModelFactory) : base(uiProvider)
+            ModeButtonViewModel.Factory viewModelFactory,
+            ManualTransitionTrigger<GameState> gameTransitionTrigger) : base(uiProvider)
         {
+            _gameTransitionTrigger = gameTransitionTrigger;
             _viewModelFactory = viewModelFactory;
             _windowsController = windowsController;
-            _stateMachine = stateMachine;
         }
         public override void Initialize()
         {
@@ -39,7 +35,7 @@ namespace Menu.Runtime.UI
         {
             Provider.UI.BindClassicButtonView(menuFieldView.ClassicButtonView);
             var classicButtonViewModel =
-                _viewModelFactory.Create(ct => _stateMachine.ChangeStateAsync<GameState>(CancellationToken.None));
+                _viewModelFactory.Create(_gameTransitionTrigger.Continue);
             Provider.UI.ClassicButtonView.Initialize(classicButtonViewModel);
 
             Provider.UI.BindMultiplayerButtons(menuFieldView.CreateHostButtonView,
