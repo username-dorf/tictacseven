@@ -5,26 +5,28 @@ namespace Core.VFX
     public class PooledFXView : MonoBehaviour
     {
         private ParticleSystem[] _systems;
-        private Color[] _baseColors;
-        private bool _hasSimpleStartColors;
+        private ParticleSystemRenderer[] _renderers;
+        private Material[] _baseMaterials;
 
         private void Awake()
         {
             _systems = GetComponentsInChildren<ParticleSystem>(true);
+            _renderers = new ParticleSystemRenderer[_systems.Length];
+            _baseMaterials = new Material[_systems.Length];
 
-            _baseColors = new Color[_systems.Length];
-            _hasSimpleStartColors = true;
             for (int i = 0; i < _systems.Length; i++)
             {
-                var main = _systems[i].main;
-                if (main.startColor.mode == ParticleSystemGradientMode.Color)
-                    _baseColors[i] = main.startColor.color;
-                else
-                    _hasSimpleStartColors = false;
+                var renderer = _systems[i].GetComponent<ParticleSystemRenderer>();
+                _renderers[i] = renderer;
+
+                if (renderer != null && renderer.material != null)
+                {
+                    _baseMaterials[i] = renderer.material;
+                }
             }
         }
 
-        public void PlayAt(Vector3 worldPos, Vector3? upNormal, float uniformScale, Color? tint)
+        public void PlayAt(Vector3 worldPos, Vector3? upNormal, float uniformScale, Material customMaterial = null)
         {
             transform.position = worldPos;
 
@@ -36,18 +38,17 @@ namespace Core.VFX
             for (int i = 0; i < _systems.Length; i++)
             {
                 var ps = _systems[i];
+                var renderer = _renderers[i];
+
                 ps.Clear(true);
 
-                if (tint.HasValue && _hasSimpleStartColors && i < _baseColors.Length)
+                if (customMaterial != null && renderer != null)
                 {
-                    var main = ps.main;
-                    var b = _baseColors[i];
-                    main.startColor = new Color(
-                        Mathf.Lerp(b.r, tint.Value.r, 0.35f),
-                        Mathf.Lerp(b.g, tint.Value.g, 0.35f),
-                        Mathf.Lerp(b.b, tint.Value.b, 0.35f),
-                        b.a
-                    );
+                    renderer.material = customMaterial;
+                }
+                else if (renderer != null && _baseMaterials[i] != null)
+                {
+                    renderer.material = _baseMaterials[i];
                 }
 
                 ps.Play(true);
@@ -60,6 +61,15 @@ namespace Core.VFX
         {
             foreach (var ps in _systems)
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            for (int i = 0; i < _renderers.Length; i++)
+            {
+                if (_renderers[i] != null && _baseMaterials[i] != null)
+                {
+                    _renderers[i].material = _baseMaterials[i];
+                }
+            }
+
             gameObject.SetActive(false);
         }
     }

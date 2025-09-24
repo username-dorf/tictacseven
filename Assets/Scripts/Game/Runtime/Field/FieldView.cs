@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Core.Common;
 using Cysharp.Threading.Tasks;
-using PrimeTween;
 using UnityEngine;
 
 namespace Game.Field
@@ -37,7 +36,7 @@ namespace Game.Field
             Vector3 planePoint = Collider != null
                 ? Collider.bounds.center + Collider.bounds.extents
                 : transform.position;
-            DragPlane = new Plane(Vector3.up, planePoint+new Vector3(0,0.5f,0));
+            DragPlane = new Plane(Vector3.up, planePoint+new Vector3(0,1.5f,0));
         }
 
         public async UniTask PlaySquareBounceAllAxes(CancellationToken ct)

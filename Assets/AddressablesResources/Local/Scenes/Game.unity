@@ -1729,7 +1729,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78a993b9c2d14ad8a12acee8ad4c4b96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: tictacseven.Game::Game.Entities.VFX.GameVFXMonoInstaller
-  fxPrefab: {fileID: 8153536257835611188, guid: 7487617d6cad8472f91859e5b44c4f08, type: 3}
+  placeFxPrefab: {fileID: 8153536257835611188, guid: 7487617d6cad8472f91859e5b44c4f08, type: 3}
+  destroyFxPrefab: {fileID: 5116964712965295611, guid: 4261d09e92d2f4dc0b56958fbd5c35c4, type: 3}
+  projectionFxPrefab: {fileID: 6538771923193646856, guid: b0c750c2c88c54cae949ba6137ac1475, type: 3}
 --- !u!1 &2094769105
 GameObject:
   m_ObjectHideFlags: 0

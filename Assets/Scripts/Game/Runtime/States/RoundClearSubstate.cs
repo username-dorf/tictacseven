@@ -17,14 +17,17 @@ namespace Game.States
         private readonly LazyInject<UserEntitiesModel> _userEntitiesModel;
         private readonly LazyInject<EntitiesBackgroundView.EntitiesPlaceholderPresenter> _opponentEntitiesPlaceholder;
         private readonly LazyInject<EntitiesBackgroundView.EntitiesPlaceholderPresenter> _userEntitiesPlaceholder;
+        private IEntityPlacementProjectionService _entityPlacementProjectionService;
 
         public RoundClearSubstate(
             LazyInject<FieldModel> fieldModel,
+            IEntityPlacementProjectionService entityPlacementProjectionService,
             [Inject(Id = UserModelConfig.OPPONENT_ID)] LazyInject<UserEntitiesModel> opponentEntitiesModel,
             [Inject(Id = UserModelConfig.ID)] LazyInject<UserEntitiesModel> userEntitiesModel,
             [Inject(Id = UserModelConfig.OPPONENT_ID)] LazyInject<EntitiesBackgroundView.EntitiesPlaceholderPresenter> opponentEntitiesPlaceholder,
             [Inject(Id = UserModelConfig.ID)] LazyInject<EntitiesBackgroundView.EntitiesPlaceholderPresenter> userEntitiesPlaceholder)
         {
+            _entityPlacementProjectionService = entityPlacementProjectionService;
             _userEntitiesPlaceholder = userEntitiesPlaceholder;
             _opponentEntitiesPlaceholder = opponentEntitiesPlaceholder;
             _userEntitiesModel = userEntitiesModel;
@@ -34,6 +37,7 @@ namespace Game.States
 
         public override async UniTask<StateTransitionInfo> Execute(CancellationToken token)
         {
+            _entityPlacementProjectionService.Clear();
             _fieldModel.Value.Drop();
             _opponentEntitiesModel.Value.Drop();
             _userEntitiesModel.Value.Drop();

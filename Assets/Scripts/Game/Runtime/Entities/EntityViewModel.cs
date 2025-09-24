@@ -24,15 +24,18 @@ namespace Game.Entities
         
         private CompositeDisposable _disposable;
         private EntityModel _model;
-        private EntityPlacementFXPool _vfxPool;
+        private EntityPlacementFXPool _placeFXPool;
+        private EntityDestroyFXPool _destroyFxPool;
 
         public EntityViewModel(
             EntityModel model,
             Sprite valueSprite,
             Material material,
-            EntityPlacementFXPool vfxPool)
+            EntityPlacementFXPool placeFXPool,
+            EntityDestroyFXPool destroyFxPool)
         {
-            _vfxPool = vfxPool;
+            _destroyFxPool = destroyFxPool;
+            _placeFXPool = placeFXPool;
             _model = model;
             _disposable = new CompositeDisposable();
             
@@ -74,12 +77,16 @@ namespace Game.Entities
 
         public void OnViewCreated(Transform viewTransform)
         {
-            _vfxPool?.Initialize(viewTransform);
+            _placeFXPool?.Initialize(viewTransform);
         }
 
-        public void CallVFX(Vector3 position)
+        public void CallPlaceVFX(Vector3 position)
         {
-            _vfxPool.Play(position,null);
+            _placeFXPool.Play(position,null);
+        }
+        public void CallDestroyVFX(Vector3 position, Material customMaterial = null)
+        {
+            _destroyFxPool.PlayAtWorldPosition(position,null, customMaterial: customMaterial);
         }
 
         private bool CanBeMoved()

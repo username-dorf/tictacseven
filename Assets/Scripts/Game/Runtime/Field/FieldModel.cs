@@ -14,6 +14,7 @@ namespace Game.Field
     {
         public IReadOnlyReactiveDictionary<Vector2Int, EntityModel> Entities => _entities;
         public IObservable<(Vector2Int,EntityModel)> OnEntityChanged => _onEntityChanged;
+        public Vector3[,] Grid => _gridCache;
         
         private ReactiveDictionary<Vector2Int, EntityModel> _entities;
         private ReactiveDictionary<Vector2Int, IPlaceableModel> _placebles = new();

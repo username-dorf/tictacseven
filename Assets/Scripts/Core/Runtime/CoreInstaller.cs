@@ -20,6 +20,7 @@ namespace Core
             CommonInstaller.Install(Container);
             AudioInstaller.Install(Container);
             FxInstaller.Install(Container);
+            WorldFxInstaller.Install(Container);
             BindBootstrap(Container);
         }
 

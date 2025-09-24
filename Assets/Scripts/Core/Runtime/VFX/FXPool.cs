@@ -10,7 +10,7 @@ namespace Core.VFX
     public interface IFxPool
     {
         void Warmup(int count);
-        void Play(Vector3 worldPos, Vector3? upNormal, float scale = 1f, Color? tint = null);
+        void Play(Vector3 worldPos, Vector3? upNormal, float scale = 1f, Material customMaterial = null);
         int ActiveCount { get; }
     }
     public abstract class FxPoolService : ObjectPool<PooledFXView>, IFxPool
@@ -30,9 +30,9 @@ namespace Core.VFX
         [Inject]
         public FxPoolService(
             [Inject(Id = "FX_PlacePiece_Prefab")] PooledFXView prefab,
-            [InjectOptional(Id = "FX_Place_AutoRecycle")] float autoRecycleAfter = 1.6f,
-            [InjectOptional(Id = "FX_Place_Prewarm")] int prewarm = 16,
-            [InjectOptional(Id = "FX_Place_HardCap")] int hardCap = 0
+            [InjectOptional(Id = "FX_Place_AutoRecycle")] float autoRecycleAfter,
+            [InjectOptional(Id = "FX_Place_Prewarm")] int prewarm,
+            [InjectOptional(Id = "FX_Place_HardCap")] int hardCap
         )
         {
             _prefab = prefab;
@@ -101,7 +101,7 @@ namespace Core.VFX
             }
         }
 
-        public void Play(Vector3 worldPos, Vector3? upNormal, float scale = 1f, Color? tint = null)
+        public void Play(Vector3 worldPos, Vector3? upNormal, float scale = 1f, Material customMaterial = null)
         {
             PooledFXView fx;
 
@@ -123,7 +123,7 @@ namespace Core.VFX
                 fx = Rent();
             }
 
-            fx.PlayAt(worldPos, upNormal, scale, tint);
+            fx.PlayAt(worldPos, upNormal, scale, customMaterial);
             var node = _activeOrder.AddLast(fx);
 
             var sd = new SerialDisposable();

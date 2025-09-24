@@ -25,6 +25,7 @@ namespace Game.States
         
         private UIRoundResultView.Factory _uiRoundResultFactory;
         private UIProvider<UIGame> _uiProvider;
+        private IEntityPlacementProjectionService _placementProjectionService;
 
         public InitialSubstate(
             IGameSubstatesInstaller gameSubstatesInstaller,
@@ -36,8 +37,10 @@ namespace Game.States
             AIUserRoundModel.Provider opponentModelProvider,
             UserRoundModel.Provider userModelProvider,
             UIRoundResultView.Factory uiRoundResultFactory,
-            UIProvider<UIGame> uiProvider)
+            UIProvider<UIGame> uiProvider,
+            IEntityPlacementProjectionService placementProjectionService)
         {
+            _placementProjectionService = placementProjectionService;
             _uiProvider = uiProvider;
             _uiRoundResultFactory = uiRoundResultFactory;
             _userModelProvider = userModelProvider;
@@ -64,6 +67,11 @@ namespace Game.States
             var fieldGrid =
                 _fieldGridFactory.Create(fieldView.Collider, FieldConfig.FIELD_ROWS, FieldConfig.FIELD_COLUMNS);
             fieldView.DebugView.SetPoints(fieldGrid);
+            var fieldGridPaths = _fieldGridFactory.CreateCellPaths(fieldView.Collider, FieldConfig.FIELD_ROWS,
+                FieldConfig.FIELD_COLUMNS);
+            fieldView.DebugView.SetPaths(fieldGridPaths);
+
+            _placementProjectionService.Initialize(fieldGrid,fieldGridPaths);
 
             var entitiesBackgroundView = await _entitiesBackgroundFactory.CreateAsync(token);
             var entitiesPositions = _entitiesBackgroundGridFactory.CreateOnRect(entitiesBackgroundView.Collider);
