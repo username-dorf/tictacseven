@@ -5,12 +5,13 @@ using Game.Entities.VFX;
 using Game.Field;
 using UniRx;
 using UnityEngine;
+using Zenject;
 
 namespace Game.Entities
 {
     public interface IEntityPlacementProjectionService
     {
-        void Initialize(Vector3[,] cellPositions, List<Vector3>[,] cellEdges);
+        void Initialize(Vector3[,] cellPositions, List<Vector3>[,] cellEdges, FieldModel fieldModel);
         void Clear();
     }
     public interface IEntityPlacementProjectionRegistrar
@@ -20,11 +21,14 @@ namespace Game.Entities
     
     public class EntityPlacementProjectionService : IEntityPlacementProjectionService, IEntityPlacementProjectionRegistrar, IDisposable
     {
+        private readonly EntityProjectionFXPool _fxPool;
+        private FieldModel _fieldModel;
         private Vector3[,] _cellPositions;
         private List<Vector3>[,] _cellEdges;
+        
         private CompositeDisposable _disposable;
-        private EntityProjectionFXPool _fxPool;
         private CancellationTokenSource _cts;
+        
         private Vector2Int _projectionCoors = new(-1,-1);
 
         public EntityPlacementProjectionService(EntityProjectionFXPool fxPool)
@@ -33,8 +37,9 @@ namespace Game.Entities
             _disposable = new CompositeDisposable();
         }
         
-        public void Initialize(Vector3[,] cellPositions, List<Vector3>[,] cellEdges)
+        public void Initialize(Vector3[,] cellPositions, List<Vector3>[,] cellEdges, FieldModel fieldModel)
         {
+            _fieldModel = fieldModel ?? throw new ArgumentNullException(nameof(fieldModel));
             _cellPositions = cellPositions;
             _cellEdges = cellEdges;
         }
@@ -69,6 +74,12 @@ namespace Game.Entities
             try
             {
                 var nearestCoors = _cellPositions.FindNearestPlace(position);
+                if (!CanProjectOn(nearestCoors))
+                {
+                    ClearNearestProjection();
+                    return;
+                }
+                
                 if (_projectionCoors.x != nearestCoors.x || _projectionCoors.y != nearestCoors.y)
                 {
                     if (_cts is not null && !_cts.IsCancellationRequested)
@@ -95,6 +106,11 @@ namespace Game.Entities
         private bool CanProject()
         {
             return _cellEdges is not null && _cellPositions is not null;
+        }
+
+        private bool CanProjectOn(Vector2Int coors)
+        {
+            return _fieldModel.IsEmpty(coors);
         }
 
         public void Dispose()

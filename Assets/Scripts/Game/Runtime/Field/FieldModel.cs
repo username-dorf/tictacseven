@@ -55,6 +55,14 @@ namespace Game.Field
             }
         }
 
+        public bool IsEmpty(Vector2Int coors)
+        {
+            if (Entities is null || Grid is null)
+                throw new Exception("FieldModel is not initialized");
+            Entities.TryGetValue(coors, out var entityModel);
+            return entityModel.Data.Owner.Value == EntityModel.EMPTY_OWNER;
+        }
+
         public float[] BuildState(
             UserEntitiesModel player,
             UserEntitiesModel opponent,

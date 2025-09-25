@@ -70,9 +70,7 @@ namespace Game.States
             var fieldGridPaths = _fieldGridFactory.CreateCellPaths(fieldView.Collider, FieldConfig.FIELD_ROWS,
                 FieldConfig.FIELD_COLUMNS);
             fieldView.DebugView.SetPaths(fieldGridPaths);
-
-            _placementProjectionService.Initialize(fieldGrid,fieldGridPaths);
-
+            
             var entitiesBackgroundView = await _entitiesBackgroundFactory.CreateAsync(token);
             var entitiesPositions = _entitiesBackgroundGridFactory.CreateOnRect(entitiesBackgroundView.Collider);
             
@@ -109,10 +107,9 @@ namespace Game.States
             var opponentEntitiesPlaceholder =
                 await _entitiesBackgroundFactory.CreatePlaceholdersAsync(opponentEntitiesModel, token);
             
-            
-
             var fieldModel = new FieldModel(fieldGrid, prespawnPreset);
             var fieldViewModel = new FieldViewModel(fieldModel, userEntitiesModel, opponentEntitiesModel);
+            _placementProjectionService.Initialize(fieldGrid, fieldGridPaths, fieldModel);
 
             _gameSubstatesInstaller
                 .BindFieldModel(fieldModel)
