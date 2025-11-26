@@ -22,7 +22,6 @@ namespace Game.Entities
         
         private EntityViewModel _viewModel;
         private FieldViewProvider _fieldViewProvider;
-        private Renderer _renderer;
 
 
         public void Initialize(EntityViewModel viewModel, FieldViewProvider fieldViewProvider)
@@ -163,7 +162,21 @@ namespace Game.Entities
         }
         private void OnVisibleChanged(bool isVisible)
         {
+            if (!isVisible)
+            {
+                var color = Renderer.material.GetColor("_TopColorA");
+                _viewModel.CallDestroyVFX(transform.position, CreateParticleMaterial(color));
+            }
+
             gameObject.SetActive(isVisible);
+        }
+        
+        private Material CreateParticleMaterial(Color color)
+        {
+            var particleShader = Shader.Find("Unlit/Color");
+            var material = new Material(particleShader);
+            material.SetColor("_Color", color);
+            return material;
         }
 
         private void DoScaleRelativeToPosition(Vector3 position, Vector3 initPosition, Vector3 initScale,
@@ -182,7 +195,7 @@ namespace Game.Entities
             if(transform.position == _animationInitialPosition)
                 return UniTask.CompletedTask;
             
-            _viewModel.CallVFX(transform.position);
+            _viewModel.CallPlaceVFX(transform.position);
             return UniTask.CompletedTask;
         }
     }

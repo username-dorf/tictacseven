@@ -49,7 +49,7 @@ namespace Game.Field
             }
             try
             {
-                var nearestCoors = FindNearestPlace(_model.Entities, placeableModel);
+                var nearestCoors = _model.Grid.FindNearestPlace(placeableModel.Transform.Position.Value);
                 var nearestPlace = _model.Entities[nearestCoors];
                 if (!CanPlace(nearestPlace, placeableModel))
                 {
@@ -72,31 +72,6 @@ namespace Game.Field
             }
         }
 
-        private Vector2Int FindNearestPlace(IEnumerable<KeyValuePair<Vector2Int, EntityModel>> places, IPlaceableModel placeableModel)
-        {
-            var maxDistance = FieldConfig.PLACE_MAGNITUDE;
-            var key = new Vector2Int(-1, -1);
-            float minDist = float.MaxValue;
-            var originPosition = placeableModel.Transform.Position.Value;
-            Vector3 origin = new Vector3(originPosition.x,0,originPosition.z);
-
-            foreach (var (coors, model) in places)
-            {
-                var targetPosition = model.Transform.Position.Value;
-                var target = new Vector3(targetPosition.x, 0, targetPosition.z);
-                float dist = Vector3.Distance(target, origin);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    key = coors;
-                }
-            }
-            if (key.x < 0 || minDist > maxDistance)
-                throw new InvalidOperationException("No suitable place found for the entity.");
-
-            return key;
-        }
-
         private bool CanPlace(EntityModel placeModel, IPlaceableModel placeableModel)
         {
             if (!IsValidOwner(placeModel, placeableModel))
@@ -117,6 +92,33 @@ namespace Game.Field
 
     public static class FieldModelExtensions
     {
+        public static Vector2Int FindNearestPlace(this Vector3[,] places, Vector3 position)
+        {
+            var maxDistance = FieldConfig.PLACE_MAGNITUDE;
+            var key = new Vector2Int(-1, -1);
+            float minDist = float.MaxValue;
+            var originPosition = position;
+            Vector3 origin = new Vector3(originPosition.x,0,originPosition.z);
+
+            for (var i = 0; i < places.GetLength(0); i++)
+            {
+                for (int j = 0; j < places.GetLength(1); j++)
+                {
+                    var targetPosition = places[i, j];
+                    var target = new Vector3(targetPosition.x, 0, targetPosition.z);
+                    float dist = Vector3.Distance(target, origin);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        key = new(i,j);
+                    }
+                }
+            }
+            if (key.x < 0 || minDist > maxDistance)
+                throw new InvalidOperationException("No suitable place found for the entity.");
+
+            return key;
+        }
         public static bool IsDraw(this FieldModel model, UserEntitiesModel hand)
         {
             var dict = model.Entities;

@@ -28,6 +28,7 @@ namespace Game.Field
             void SetSelected(bool selected);
             void SetMoving(bool isMoving);
             void SetInteractable(bool isSelectable);
+            void SetScale(Vector3 scale);
             void Reset();
         }
         public interface IData: IDisposable

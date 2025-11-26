@@ -17,6 +17,8 @@ namespace Game.Entities
                 .AsTransient();
             Container.BindInterfacesAndSelfTo<EntityFactory>()
                 .AsSingle();
+            Container.BindInterfacesTo<EntityPlacementProjectionService>()
+                .AsSingle();
         }
     }
 }

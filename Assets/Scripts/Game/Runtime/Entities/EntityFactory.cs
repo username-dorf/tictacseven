@@ -38,13 +38,16 @@ namespace Game.Entities
         private EntitiesValueSpriteProvider _valueSpriteProvider;
         private EntitiesMaterialAssetsProvider _materialAssetsProvider;
         private DiContainer _diContainer;
+        private IEntityPlacementProjectionRegistrar _placementProjectionRegistrar;
 
         public EntityFactory(
             DiContainer diContainer,
             FieldViewProvider fieldViewProvider,
             EntitiesValueSpriteProvider valueSpriteProvider,
-            EntitiesMaterialAssetsProvider materialAssetsProvider)
+            EntitiesMaterialAssetsProvider materialAssetsProvider,
+            IEntityPlacementProjectionRegistrar placementProjectionRegistrar)
         {
+            _placementProjectionRegistrar = placementProjectionRegistrar;
             _diContainer = diContainer;
             _materialAssetsProvider = materialAssetsProvider;
             _valueSpriteProvider = valueSpriteProvider;
@@ -134,6 +137,7 @@ namespace Game.Entities
             var material = _materialAssetsProvider.Get(materialId);
             var valueSprite = _valueSpriteProvider.GetAsset(model.Data.Merit.Value);
             var viewModel = _diContainer.Instantiate<EntityViewModel>(new object[]{model, valueSprite, material});
+            _placementProjectionRegistrar.RegisterEntity(viewModel);
             view.Initialize(viewModel, _fieldViewProvider);
             return (viewModel, model);
         }

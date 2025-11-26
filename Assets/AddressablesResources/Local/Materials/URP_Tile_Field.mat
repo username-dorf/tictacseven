@@ -38,7 +38,7 @@ Material:
     - _DigitCorner: 0
     - _DigitInset: 0.06
     - _DigitOffsetX: 0
-    - _DigitOffsetY: 0.014
+    - _DigitOffsetY: 0
     - _DigitOpacity: 0.07
     - _DigitRotation: 0
     - _DigitScale: 1
