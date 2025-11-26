@@ -312,5 +312,75 @@ namespace Core.VFX
                 ReturnNowSafely();
             }
         }
+        public async UniTask PlayOnPointAsync(
+            Vector3 point,
+            Vector3? upNormal,
+            float scale = 1f,
+            Material customMaterial = null,
+            CancellationToken token = default)
+        {
+            
+            if (!_initialized)
+                Initialize();
+
+            PooledFXView fx;
+            if (_hardCap > 0 && _activeOrder.Count >= _hardCap)
+            {
+                fx = _activeOrder.First.Value;
+                _activeOrder.RemoveFirst();
+                if (_life.TryGetValue(fx, out var sdOld))
+                {
+                    sdOld.Disposable = Disposable.Empty;
+                    _life.Remove(fx);
+                }
+                fx.StopImmediate();
+            }
+            else
+            {
+                fx = Rent();
+            }
+
+            if (fx == null) return;
+
+            var spawnPos = point;
+            fx.PlayAt(spawnPos, upNormal, scale, customMaterial);
+            var node = _activeOrder.AddLast(fx);
+            var sd = new SerialDisposable();
+            _life[fx] = sd;
+
+            bool returned = false;
+            void ReturnNowSafely()
+            {
+                if (!returned)
+                {
+                    returned = true;
+                    SafeReturn(fx);
+                }
+            }
+
+            try
+            {
+                if (upNormal.HasValue)
+                    fx.transform.up = upNormal.Value;
+
+                await UniTask.WaitUntilCanceled(token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            finally
+            {
+                if (_life.TryGetValue(fx, out var alive))
+                {
+                    alive.Disposable = Disposable.Empty;
+                    _life.Remove(fx);
+                }
+                ReturnNowSafely();
+            }
+        }
     }
 }

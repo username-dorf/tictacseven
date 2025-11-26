@@ -88,7 +88,8 @@ namespace Game.Entities
                     _projectionCoors = nearestCoors;
 
                     var path = _cellEdges[nearestCoors.x, nearestCoors.y];
-                    var task = _fxPool.PlayAlongPathAsync(path, Vector3.up, 1f, null, 8, true, _cts.Token);
+                    var pos = _cellPositions[nearestCoors.x, nearestCoors.y];
+                    var task = _fxPool.PlayOnPointAsync(pos, Vector3.up, 3.2f, null, _cts.Token);
                 }
             }
             catch (InvalidOperationException)
